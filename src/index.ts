@@ -202,11 +202,11 @@ export class AxiosWrapper {
 const instance = new AxiosWrapper()
 
 interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
-export type { AxiosPromise };
+export type { AxiosPromise, AxiosWrapper as AxiosInstance };
 
-export type AxiosInstance = AxiosWrapper & AxiosWrapper['request'] & { isAxiosError: (err:any) => err is GaxiosError};
+export type AxiosStatic = AxiosWrapper & AxiosWrapper['request'] & { isAxiosError: (err:any) => err is GaxiosError};
 
-const enrichedInstance: AxiosInstance = instance.request.bind(instance) as any;
+const enrichedInstance: AxiosStatic = instance.request.bind(instance) as any;
 enrichedInstance.interceptors = instance.interceptors;
 enrichedInstance.request = instance.request.bind(instance),
 enrichedInstance.getUri = instance.getUri.bind(instance),
