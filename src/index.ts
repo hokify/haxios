@@ -34,6 +34,16 @@ export class AxiosWrapper {
       config.timeout = timeout;
     }
 
+    // HTTP basic authentication
+    if (config.auth) {
+      var username = config.auth.username || '';
+      var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
+
+      if (!config.headers) config.headers = {}
+      // todo: get rid of btoa
+      config.headers.Authorization = 'Basic ' + btoa(username + ':' + password);
+    }
+
     return {
       ...config,
       signal: config.signal ? config.signal as AbortSignal : undefined,

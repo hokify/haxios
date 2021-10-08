@@ -34,11 +34,6 @@ export interface AxiosResponseTransformer {
     (data: any, headers?: AxiosResponseHeaders): any;
 }*/
 
-export interface AxiosBasicCredentials {
-    username: string;
-    password: string;
-}
-
 export interface Cancel {
     message: string;
 }
@@ -54,7 +49,11 @@ export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
     retryConfig?: RetryConfig;
     // maps to credentials: include
     withCredentials?: boolean;
-
+    // basic auth
+    auth?: {
+        username: string;
+        password: string;
+    };
 
     /* NEEDS MORE OWRK */
     // not implemented
@@ -63,8 +62,7 @@ export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
     transformResponse?: never; // AxiosResponseTransformer | AxiosResponseTransformer[];
     // not implemented
     timeoutErrorMessage?: string;
-    // not implemented
-    auth?: never; // AxiosBasicCredentials;
+
     // ??
     xsrfCookieName?: string;
     // ??
