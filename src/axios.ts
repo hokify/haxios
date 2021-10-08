@@ -82,6 +82,14 @@ export interface TransitionalOptions{
     clarifyTimeoutError: boolean;
 }
 
+export type ResponseType =
+    | 'arraybuffer'
+    | 'blob'
+    | 'document'
+    | 'json'
+    | 'text'
+    | 'stream'
+
 export interface AxiosRequestConfig<D = any>  extends AxiosConfig {
     url?: string;
     method?: Method;

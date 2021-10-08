@@ -7,4 +7,4 @@ supports:
 * dynamic baseURL ..
 * and more to come
 
-minimum support node version is 14!
+target support is es6 / modern browsers
