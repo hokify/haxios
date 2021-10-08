@@ -6,3 +6,5 @@ supports:
 * get,post,..etc methods
 * dynamic baseURL ..
 * and more to come
+
+minimum support node version is 14!

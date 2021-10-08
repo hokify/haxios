@@ -1,11 +1,16 @@
 {
   "name": "haxios",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "full compatible layer for axios based on gaxios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hokify/haxios.git"
+  },
   "scripts": {
     "build": "tsc",
+    "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "directories": {
