@@ -3,7 +3,7 @@ import { AbortSignal } from 'abort-controller';
 import * as Gaxios from 'gaxios'
 import { InterceptorHandler, InterceptorManager } from './InterceptorManager'
 import {AxiosConfig, HAxiosRequestConfig, HAxiosResponse} from "./axios";
-import {GaxiosOptions} from "gaxios";
+import {GaxiosError, GaxiosOptions} from "gaxios";
 
 export * from './axios';
 
@@ -187,5 +187,7 @@ export default {
   setBaseURL: instance.setBaseURL.bind(instance),
   setHeader: instance.setHeader.bind(instance),
 
-  create: instance.create.bind(instance)
+  create: instance.create.bind(instance),
+
+  isAxiosError: (err: any): err is GaxiosError => err instanceof GaxiosError
 }
