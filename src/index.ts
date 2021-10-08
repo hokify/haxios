@@ -37,7 +37,7 @@ export class AxiosWrapper {
     response: new InterceptorManager()
   }
 
-  request<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (requestParams: HAxiosRequestConfig<D>): Promise<R> {
+  request<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (requestParams: HAxiosRequestConfig<D>): Promise<R> {
     if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
       requestParams.baseURL = this.config.baseURL
       // sanitize baseURL
@@ -110,35 +110,35 @@ export class AxiosWrapper {
     return promise
   }
 
-  getUri<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>> (config: HAxiosRequestConfig): Promise<R> {
+  getUri<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>> (config: HAxiosRequestConfig): Promise<R> {
     return this.request(config)
   }
 
-  get<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
+  get<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'GET', ...config })
   }
 
-  delete<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
+  delete<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'DELETE', ...config })
   }
 
-  head<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
+  head<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'HEAD', ...config })
   }
 
-  options<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
+  options<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'OPTIONS', ...config })
   }
 
-  post<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
+  post<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'POST', ...config })
   }
 
-  put<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
+  put<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'PUT', ...config })
   }
 
-   patch<T = unknown, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
+   patch<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (url: string, data?: D, config?: HAxiosRequestConfig<D>): Promise<R> {
     return this.request({ url, method: 'PATCH', ...config })
   }
 

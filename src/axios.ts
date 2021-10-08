@@ -8,7 +8,7 @@ export interface HAxiosRequestConfig<D = any> extends GaxiosOptions {
     credentials?: 'omit' | 'same-origin' | 'include';
 }
 
-export interface HAxiosResponse<T = unknown, D = any> extends GaxiosResponse<T> {
+export interface HAxiosResponse<T = any, D = any> extends GaxiosResponse<T> {
     config: HAxiosRequestConfig<D>;
 }
 
@@ -57,7 +57,7 @@ export interface AxiosBasicCredentials {
     password: string;
 }
 
-export interface AxiosResponse<T = unknown, D = any>  {
+export interface AxiosResponse<T = any, D = any>  {
     data: T;
     status: number;
     statusText: string;
