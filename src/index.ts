@@ -4,16 +4,36 @@ import * as Gaxios from 'gaxios'
 import { InterceptorHandler, InterceptorManager } from './InterceptorManager'
 import {AxiosConfig, HAxiosRequestConfig, HAxiosResponse} from "./axios";
 import {GaxiosError, GaxiosOptions} from "gaxios";
+import {GaxiosResponse} from "gaxios/build/src/common";
 
 export * from './axios';
 
 export type { HAxiosResponse as AxiosResponse}
 export type { HAxiosRequestConfig as AxiosRequestConfig}
 
+const creatAxiosError = (message: string, options: AxiosConfig, code: string, response?: GaxiosResponse<any>) => {
+  const err = new GaxiosError(message, options as any, response || { status: code} as any);
+  err.code = code;
+  return err;
+}
 export class AxiosWrapper {
   private gaxiosInstance: Gaxios.Gaxios;
 
   private transformAxiosConfigToGaxios(config: AxiosConfig): GaxiosOptions {
+    if (config.timeout) {
+      const timeout = parseInt(config.timeout as any, 10);
+
+      if (isNaN(timeout)) {
+        throw creatAxiosError(
+            'error trying to parse `config.timeout` to int',
+            config,
+            'ERR_PARSE_TIMEOUT'
+        );
+      }
+
+      config.timeout = timeout;
+    }
+
     return {
       ...config,
       signal: config.signal ? config.signal as AbortSignal : undefined,
@@ -40,7 +60,7 @@ export class AxiosWrapper {
     response: new InterceptorManager()
   }
 
-  request<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (requestParams: HAxiosRequestConfig<D>): Promise<R> {
+  async request<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any> (requestParams: HAxiosRequestConfig<D>): Promise<R> {
     if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
       requestParams.baseURL = this.config.baseURL
       // sanitize baseURL
@@ -53,11 +73,13 @@ export class AxiosWrapper {
       requestParams.credentials = 'include';
     }
 
+    const gaxiosRequestParams = this.transformAxiosConfigToGaxios(requestParams);
+
     // filter out skipped interceptors
     const requestInterceptorChain: any[] = []
     let synchronousRequestInterceptors = true
     this.interceptors.request.forEach(function unshiftRequestInterceptors (interceptor: InterceptorHandler) {
-      if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(requestParams) === false) {
+      if (typeof interceptor.runWhen === 'function' && interceptor.runWhen(gaxiosRequestParams) === false) {
         return
       }
 
@@ -79,7 +101,7 @@ export class AxiosWrapper {
       Array.prototype.unshift.apply(chain, requestInterceptorChain)
       chain = chain.concat(responseInterceptorChain)
 
-      promise = Promise.resolve(requestParams)
+      promise = Promise.resolve(gaxiosRequestParams)
 
       while (chain.length) {
         promise = promise.then(chain.shift(), chain.shift())
@@ -88,7 +110,7 @@ export class AxiosWrapper {
       return promise
     }
 
-    let newConfig = { ...requestParams }
+    let newConfig = { ...gaxiosRequestParams }
     while (requestInterceptorChain.length) {
       const onFulfilled = requestInterceptorChain.shift()
       const onRejected = requestInterceptorChain.shift()
