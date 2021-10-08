@@ -1,6 +1,6 @@
 {
   "name": "haxios",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "full compatible layer for axios based on gaxios",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,7 +26,8 @@
   },
   "devDependencies": {
     "@types/node": "^16.10.3",
+    "mocha": "^9.1.2",
     "typescript": "^4.4.3",
-    "mocha": "^9.1.2"
+    "prettier": "^2.4.1"
   }
 }

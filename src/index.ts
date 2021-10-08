@@ -11,6 +11,8 @@ export * from './axios';
 export type { HAxiosResponse as AxiosResponse}
 export type { HAxiosRequestConfig as AxiosRequestConfig}
 
+export type Method = GaxiosOptions['method'];
+
 const creatAxiosError = (message: string, options: AxiosConfig, code: string, response?: GaxiosResponse<any>) => {
   const err = new GaxiosError(message, options as any, response || { status: code} as any);
   err.code = code;
@@ -202,31 +204,19 @@ const instance = new AxiosWrapper()
 interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
 export type { AxiosPromise, AxiosWrapper as AxiosInstance };
 
-export default {
-  ...instance,
-  request: instance.request.bind(instance),
+const enrichedInstance: AxiosWrapper & AxiosWrapper['request'] & { isAxiosError: (err:any) => err is GaxiosError} = instance.request.bind(instance) as any;
+enrichedInstance.interceptors = instance.interceptors;
+enrichedInstance.request = instance.request.bind(instance),
+enrichedInstance.getUri = instance.getUri.bind(instance),
+enrichedInstance.delete = instance.delete.bind(instance),
+enrichedInstance.head = instance.head.bind(instance),
+enrichedInstance.options = instance.options.bind(instance),
+enrichedInstance.post = instance.post.bind(instance),
+enrichedInstance.put = instance.put.bind(instance),
+enrichedInstance.patch = instance.patch.bind(instance),
+enrichedInstance.setBaseURL = instance.setBaseURL.bind(instance),
+enrichedInstance.setHeader = instance.setHeader.bind(instance),
+enrichedInstance.create = instance.create.bind(instance),
+enrichedInstance.isAxiosError =  (err: any): err is GaxiosError => err instanceof GaxiosError;
 
-  getUri: instance.getUri.bind(instance),
-
-  get: instance.get.bind(instance),
-
-  delete: instance.delete.bind(instance),
-
-  head: instance.head.bind(instance),
-
-  options: instance.options.bind(instance),
-
-  post: instance.post.bind(instance),
-
-  put: instance.put.bind(instance),
-
-  patch: instance.patch.bind(instance),
-
-  setBaseURL: instance.setBaseURL.bind(instance),
-  setHeader: instance.setHeader.bind(instance),
-
-  create: instance.create.bind(instance),
-
-  isAxiosError: (err: any): err is GaxiosError => err instanceof GaxiosError,
-
-}
+export default enrichedInstance;
