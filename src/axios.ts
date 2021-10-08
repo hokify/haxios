@@ -48,22 +48,9 @@ export interface AxiosResponseTransformer {
 }
 
 
-export interface AxiosAdapter {
-    (config: AxiosRequestConfig): Promise<AxiosResponse<any>>;
-}
-
 export interface AxiosBasicCredentials {
     username: string;
     password: string;
-}
-
-export interface AxiosResponse<T = any, D = any>  {
-    data: T;
-    status: number;
-    statusText: string;
-    headers: AxiosResponseHeaders;
-    config: AxiosRequestConfig<D>;
-    request?: any;
 }
 
 export interface Cancel {
@@ -76,29 +63,7 @@ export interface CancelToken {
     throwIfRequested(): void;
 }
 
-export interface TransitionalOptions{
-    silentJSONParsing: boolean;
-    forcedJSONParsing: boolean;
-    clarifyTimeoutError: boolean;
-}
-
-export type ResponseType =
-    | 'arraybuffer'
-    | 'blob'
-    | 'document'
-    | 'json'
-    | 'text'
-    | 'stream'
-
-export interface AxiosRequestConfig<D = any>  extends AxiosConfig {
-    url?: string;
-    method?: Method;
-    data?: D;
-    params?: any;
-    responseType?: ResponseType;
-}
-
-export interface AxiosConfig extends Omit<GaxiosOptions, 'method' | 'responseType' | 'validateStatus' | 'signal' | 'adapter'> {
+export interface AxiosConfig extends Omit<GaxiosOptions, 'method' | 'responseType' | 'validateStatus' | 'signal'> {
     baseURL?: string;
     transformRequest?: AxiosRequestTransformer | AxiosRequestTransformer[];
     transformResponse?: AxiosResponseTransformer | AxiosResponseTransformer[];
@@ -107,7 +72,6 @@ export interface AxiosConfig extends Omit<GaxiosOptions, 'method' | 'responseTyp
     timeout?: number;
     timeoutErrorMessage?: string;
     withCredentials?: boolean;
-    adapter?: AxiosAdapter;
     auth?: AxiosBasicCredentials;
     xsrfCookieName?: string;
     xsrfHeaderName?: string;
@@ -123,7 +87,6 @@ export interface AxiosConfig extends Omit<GaxiosOptions, 'method' | 'responseTyp
     proxy?: AxiosProxyConfig | false;
     cancelToken?: CancelToken;
     decompress?: boolean;
-    transitional?: TransitionalOptions;
     signal?: AbortSignal;
     retry?: boolean;
     retryConfig?: RetryConfig;

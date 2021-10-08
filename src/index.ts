@@ -7,6 +7,9 @@ import {GaxiosError, GaxiosOptions} from "gaxios";
 
 export * from './axios';
 
+export type { HAxiosResponse as AxiosResponse}
+export type { HAxiosRequestConfig as AxiosRequestConfig}
+
 export class AxiosWrapper {
   private gaxiosInstance: Gaxios.Gaxios;
 
@@ -164,6 +167,9 @@ export class AxiosWrapper {
 
 const instance = new AxiosWrapper()
 
+interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
+export type { AxiosPromise, AxiosWrapper as AxiosInstance };
+
 export default {
   ...instance,
   request: instance.request.bind(instance),
@@ -189,5 +195,6 @@ export default {
 
   create: instance.create.bind(instance),
 
-  isAxiosError: (err: any): err is GaxiosError => err instanceof GaxiosError
+  isAxiosError: (err: any): err is GaxiosError => err instanceof GaxiosError,
+
 }
