@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "es2020",
+    "module": "commonjs",
+    "declaration": true,
+    "moduleResolution": "Node",
+    "strict": true
+  },
+  "include": ["./src"],
+  "exclude": [
+    "node_modules"
+  ]
+}

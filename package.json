@@ -1,0 +1,26 @@
+{
+  "name": "haxios",
+  "version": "1.0.0",
+  "description": "full compatible layer for axios based on gaxios",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "directories": {
+    "lib": "dist"
+  },
+  "files": [
+    "dist"
+  ],
+  "author": "Simon Tretter <s.tretter@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "gaxios": "^4.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^16.10.3",
+    "typescript": "^4.4.3"
+  }
+}
