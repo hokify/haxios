@@ -12,7 +12,7 @@ import axios, {
 
 const config: AxiosRequestConfig = {
   url: '/user',
-  method: 'get',
+  method: 'GET',
   baseURL: 'https://api.example.com/',
   transformRequest: (data: any) => '{"foo":"bar"}',
   transformResponse: [

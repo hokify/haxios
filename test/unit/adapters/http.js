@@ -154,26 +154,38 @@ describe('supports http with nodejs', function () {
     });
   });
 
-  it('should redirect', function (done) {
+  it('should redirect', async function (done) {
     var str = 'test response';
 
-    server = http.createServer(function (req, res) {
-      var parsed = url.parse(req.url);
+    server = await new Promise((resolve, reject) => {
+      http.createServer(function (req, res) {
+        var parsed = url.parse(req.url);
 
-      if (parsed.pathname === '/one') {
-        res.setHeader('Location', '/two');
-        res.statusCode = 302;
-        res.end();
-      } else {
-        res.end(str);
-      }
-    }).listen(4444, function () {
-      axios.get('http://localhost:4444/one').then(function (res) {
-        assert.equal(res.data, str);
-        assert.equal(res.request.path, '/two');
-        done();
+        if (parsed.pathname === '/one') {
+          res.setHeader('Location', '/two');
+          res.statusCode = 302;
+          res.end();
+        } else {
+          res.end(str);
+        }
+      }).listen(4444, function () {
+        console.log('A');
+        axios.get('http://localhost:4444/one').then(function (res) {
+          try {
+            console.log('B', res.data);
+            assert.equal(res.data, str);
+            console.log('B', res.request);
+            assert.equal(res.request.path, '/two');
+            console.log('C');
+            resolve()
+          } catch(err) {
+            console.error(err);
+            reject(err)
+          }
+        });
       });
     });
+    done();
   });
 
   it('should not redirect', function (done) {
