@@ -4,8 +4,6 @@ export interface HAxiosRequestConfig<D = any> extends AxiosConfig {
 	data?: D;
 	onDownloadProgress?: (progressEvent: any) => void;
 	withCredentials?: boolean;
-	// if withCredentials is true, it's set to include
-	credentials?: 'omit' | 'same-origin' | 'include';
 }
 
 export interface HAxiosResponse<T = any, D = any> extends GaxiosResponse<T> {
@@ -45,6 +43,9 @@ export interface CancelToken {
 }
 
 export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
+	// if withCredentials is true, it's set to include
+	credentials?: 'omit' | 'same-origin' | 'include';
+
 	retry?: boolean;
 	retryConfig?: RetryConfig;
 	// maps to credentials: include

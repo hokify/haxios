@@ -55,6 +55,34 @@ export class AxiosWrapper {
 			config.headers.Authorization = 'Basic ' + btoa(username + ':' + password);
 		}
 
+
+		if (config.withCredentials) {
+			config.credentials = 'include';
+		}
+
+		const setContentTypeIfUnset = (contentType: string) => {
+			if (!config.headers) config.headers = {};
+
+			config.headers['Content-Type'] = contentType;
+		};
+
+		if (typeof URLSearchParams !== 'undefined' && config.data instanceof URLSearchParams) {
+			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
+			config.data = config.data.toString();
+
+			console.log('config.headers[\'Content-Type\']', config.headers?.['Content-Type']);
+		}
+
+		if (
+			(config.data !== null && typeof config.data === 'object') ||
+			// this condition doesn't fully make sense to me, but it's the
+			// same logic as in axios: https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/lib/defaults.js#L74
+			config.headers?.['Content-Type'] === 'application/json'
+		) {
+			setContentTypeIfUnset('application/json');
+			config.data = JSON.stringify(config.data);
+		}
+
 		return config;
 	}
 
@@ -88,10 +116,6 @@ export class AxiosWrapper {
 				if (!requestParams.baseURL?.endsWith('/') && !requestParams.url?.startsWith('/')) {
 					requestParams.baseURL += '/';
 				}
-			}
-
-			if (requestParams.withCredentials) {
-				requestParams.credentials = 'include';
 			}
 
 			const gaxiosRequestParams = this.transformAxiosConfigToGaxios(requestParams);
@@ -138,7 +162,7 @@ export class AxiosWrapper {
 				return await promise;
 			}
 
-			let newConfig = {...gaxiosRequestParams};
+			let newConfig = gaxiosRequestParams;
 			while (requestInterceptorChain.length) {
 				const onFulfilled = requestInterceptorChain.shift();
 				const onRejected = requestInterceptorChain.shift();
@@ -164,11 +188,10 @@ export class AxiosWrapper {
 		} catch (err: any) {
 			// mirror behaviour of XHR
 			if (err.type === 'request-timeout') {
-				err.code = 'ECONNABORTED'
+				err.code = 'ECONNABORTED';
 			}
 			throw err;
 		}
-
 	}
 
 	getUri<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
