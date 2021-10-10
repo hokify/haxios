@@ -102,7 +102,7 @@ export class AxiosWrapper {
 			config.headers['Content-Type'] = contentType;
 		};
 
-		let originalData: any;
+		let originalData: any | undefined;
 		if (
 			isFormData(config.data) ||
 			isArrayBuffer(config.data) ||
@@ -111,7 +111,7 @@ export class AxiosWrapper {
 			isFile(config.data) ||
 			isBlob(config.data)
 		) {
-			/** special formdata handling via config.adpater!
+			/** special formdata handling via config.adapter!
 			 * see https://github.com/googleapis/gaxios/issues/447 */
 			delete config.headers['Content-Type']; // Let the browser set it
 			originalData = config.data;
@@ -141,7 +141,9 @@ export class AxiosWrapper {
 					// see https://github.com/googleapis/gaxios/issues/447
 					if (originalData) {
 						options.body = originalData;
-						delete options.headers['Content-Type']; // Let the browser set it
+						if (isFormData(originalData)) {
+							delete options.headers['Content-Type']; // Let the browser set it
+						}
 					}
 
 					const result = (await defaultAdapter(options)) as HAxiosResponse;
