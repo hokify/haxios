@@ -4,6 +4,16 @@ import { AxiosAdapter, AxiosConfig, HAxiosRequestConfig, HAxiosResponse } from '
 import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
 import { Cancel, CancelToken } from './CancelToken';
+import {
+	isArrayBuffer,
+	isArrayBufferView,
+	isBlob,
+	isBuffer,
+	isFile,
+	isFormData,
+	isStream,
+	isURLSearchParams
+} from './utils';
 
 export type { Cancel, Canceler, CancelToken, CancelTokenSource } from './CancelToken';
 
@@ -92,18 +102,27 @@ export class AxiosWrapper {
 			config.headers['Content-Type'] = contentType;
 		};
 
-		if (typeof URLSearchParams !== 'undefined' && config.data instanceof URLSearchParams) {
-			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
-			config.data = config.data.toString();
-		}
-
-		let originalData;
-		if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+		let originalData: any;
+		if (
+			isFormData(config.data) ||
+			isArrayBuffer(config.data) ||
+			isBuffer(config.data) ||
+			isStream(config.data) ||
+			isFile(config.data) ||
+			isBlob(config.data)
+		) {
 			/** special formdata handling via config.adpater!
 			 * see https://github.com/googleapis/gaxios/issues/447 */
 			delete config.headers['Content-Type']; // Let the browser set it
 			originalData = config.data;
 			config.data = undefined;
+		} else if (isArrayBufferView(config.data)) {
+			delete config.headers['Content-Type']; // Let the browser set it
+			originalData = config.data.buffer;
+			config.data = undefined;
+		} else if (isURLSearchParams(config.data)) {
+			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
+			config.data = config.data.toString();
 		} else if (
 			(config.data !== null && typeof config.data === 'object') ||
 			// this condition doesn't fully make sense to me, but it's the
@@ -117,10 +136,10 @@ export class AxiosWrapper {
 		if (!config.adapter) {
 			config.adapter = (async (options, defaultAdapter) => {
 				try {
-					// reapply formdata
+					// reapply original data
 					// due to a bug/missing functionality in gaxios, data is parsed as json
 					// see https://github.com/googleapis/gaxios/issues/447
-					if (originalData && typeof FormData !== 'undefined' && originalData instanceof FormData) {
+					if (originalData) {
 						options.body = originalData;
 						delete options.headers['Content-Type']; // Let the browser set it
 					}
