@@ -1,7 +1,9 @@
 {
-  "spec": "./test/unit/**/*.js",
+  "spec": "./test/unit/**/*.ts",
   "require": ["ts-node/register"],
   // "timeout": 30000,
   "watch-files": ["./test/unit/**/*.js"],
-  "exit": true
+  "exit": true,
+  "ui": "bdd",
+  "recursive": true
 }

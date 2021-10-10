@@ -1,17 +1,19 @@
-var axios = require('../../../src').default;
-var http = require('http');
-var https = require('https');
-var net = require('net');
-var url = require('url');
-var zlib = require('zlib');
-var assert = require('assert');
-var fs = require('fs');
-var path = require('path');
-var pkg = require('./../../../package.json');
-let server: any;
-let proxy: any;
+
 
 describe('supports http with nodejs', function () {
+	var axios = require('../../../src').default;
+	var http = require('http');
+	var https = require('https');
+	var net = require('net');
+	var url = require('url');
+	var zlib = require('zlib');
+	var assert = require('assert');
+	var fs = require('fs');
+	var path = require('path');
+	var pkg = require('./../../../package.json');
+	let server: any;
+	let proxy: any;
+
 	afterEach(function () {
 		if (server) {
 			server.close();
