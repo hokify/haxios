@@ -2,7 +2,7 @@
 // https://github.com/axios/axios/issues/3407
 // https://github.com/axios/axios/issues/3369
 
-const axios = require('../../../dist');
+const axios = require('../../../dist').default;
 const http = require('http');
 const assert = require('assert');
 

@@ -81,85 +81,94 @@ export class AxiosWrapper {
 	async request<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
 		requestParams: HAxiosRequestConfig<D>
 	): Promise<R> {
-		if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
-			requestParams.baseURL = this.baseURL;
-			// sanitize baseURL
-			if (!requestParams.baseURL?.endsWith('/') && !requestParams.url?.startsWith('/')) {
-				requestParams.baseURL += '/';
-			}
-		}
-
-		if (requestParams.withCredentials) {
-			requestParams.credentials = 'include';
-		}
-
-		const gaxiosRequestParams = this.transformAxiosConfigToGaxios(requestParams);
-
-		// filter out skipped interceptors
-		const requestInterceptorChain: any[] = [];
-		let synchronousRequestInterceptors = true;
-		this.interceptors.request.forEach(function unshiftRequestInterceptors(
-			interceptor: InterceptorHandler
-		) {
-			if (
-				typeof interceptor.runWhen === 'function' &&
-				interceptor.runWhen(gaxiosRequestParams) === false
-			) {
-				return;
-			}
-
-			synchronousRequestInterceptors = !!(
-				synchronousRequestInterceptors && interceptor.synchronous
-			);
-
-			requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
-		});
-
-		const responseInterceptorChain: any[] = [];
-		this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
-			responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
-		});
-
-		let promise: Promise<any>;
-
-		if (!synchronousRequestInterceptors) {
-			let chain = [this.gaxiosInstance.request.bind(this.gaxiosInstance), undefined];
-
-			Array.prototype.unshift.apply(chain, requestInterceptorChain);
-			chain = chain.concat(responseInterceptorChain);
-
-			promise = Promise.resolve(gaxiosRequestParams);
-
-			while (chain.length) {
-				promise = promise.then(chain.shift(), chain.shift());
-			}
-
-			return promise;
-		}
-
-		let newConfig = { ...gaxiosRequestParams };
-		while (requestInterceptorChain.length) {
-			const onFulfilled = requestInterceptorChain.shift();
-			const onRejected = requestInterceptorChain.shift();
-			try {
-				newConfig = onFulfilled(newConfig);
-			} catch (error) {
-				onRejected(error);
-				break;
-			}
-		}
-
 		try {
-			promise = this.gaxiosInstance.request(newConfig);
-		} catch (error) {
-			return Promise.reject(error);
+			if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
+				requestParams.baseURL = this.baseURL;
+				// sanitize baseURL
+				if (!requestParams.baseURL?.endsWith('/') && !requestParams.url?.startsWith('/')) {
+					requestParams.baseURL += '/';
+				}
+			}
+
+			if (requestParams.withCredentials) {
+				requestParams.credentials = 'include';
+			}
+
+			const gaxiosRequestParams = this.transformAxiosConfigToGaxios(requestParams);
+
+			// filter out skipped interceptors
+			const requestInterceptorChain: any[] = [];
+			let synchronousRequestInterceptors = true;
+			this.interceptors.request.forEach(function unshiftRequestInterceptors(
+				interceptor: InterceptorHandler
+			) {
+				if (
+					typeof interceptor.runWhen === 'function' &&
+					interceptor.runWhen(gaxiosRequestParams) === false
+				) {
+					return;
+				}
+
+				synchronousRequestInterceptors = !!(
+					synchronousRequestInterceptors && interceptor.synchronous
+				);
+
+				requestInterceptorChain.unshift(interceptor.fulfilled, interceptor.rejected);
+			});
+
+			const responseInterceptorChain: any[] = [];
+			this.interceptors.response.forEach(function pushResponseInterceptors(interceptor) {
+				responseInterceptorChain.push(interceptor.fulfilled, interceptor.rejected);
+			});
+
+			let promise: Promise<any>;
+
+			if (!synchronousRequestInterceptors) {
+				let chain = [this.gaxiosInstance.request.bind(this.gaxiosInstance), undefined];
+
+				Array.prototype.unshift.apply(chain, requestInterceptorChain);
+				chain = chain.concat(responseInterceptorChain);
+
+				promise = Promise.resolve(gaxiosRequestParams);
+
+				while (chain.length) {
+					promise = promise.then(chain.shift(), chain.shift());
+				}
+
+				return await promise;
+			}
+
+			let newConfig = {...gaxiosRequestParams};
+			while (requestInterceptorChain.length) {
+				const onFulfilled = requestInterceptorChain.shift();
+				const onRejected = requestInterceptorChain.shift();
+				try {
+					newConfig = onFulfilled(newConfig);
+				} catch (error) {
+					onRejected(error);
+					break;
+				}
+			}
+
+			try {
+				promise = this.gaxiosInstance.request(newConfig);
+			} catch (error) {
+				return Promise.reject(error);
+			}
+
+			while (responseInterceptorChain.length) {
+				promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
+			}
+
+			return await promise;
+		} catch (err: any) {
+			// mirror behaviour of XHR
+			if (err.type === 'request-timeout') {
+				err.code = 'ECONNABORTED'
+			}
+			throw err;
 		}
 
-		while (responseInterceptorChain.length) {
-			promise = promise.then(responseInterceptorChain.shift(), responseInterceptorChain.shift());
-		}
-
-		return promise;
 	}
 
 	getUri<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(

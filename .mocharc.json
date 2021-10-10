@@ -1,5 +1,6 @@
 {
   "spec": "./test/unit/**/*.js",
   // "timeout": 30000,
-  "watch-files": ["./test/unit/**/*.js"]
+  "watch-files": ["./test/unit/**/*.js"],
+  "exit": true
 }
