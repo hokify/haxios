@@ -9,6 +9,7 @@ import { CancelToken } from './CancelToken';
 
 export * from './axios';
 
+export { GaxiosError as AxiosError };
 export type { HAxiosResponse as AxiosResponse };
 export type { HAxiosRequestConfig as AxiosRequestConfig };
 
@@ -26,6 +27,8 @@ const creatAxiosError = (
 };
 export class AxiosWrapper {
 	private gaxiosInstance: Gaxios.Gaxios;
+
+	baseURL?: string;
 
 	private transformAxiosConfigToGaxios(config: AxiosConfig): GaxiosOptions {
 		if (config.timeout) {
@@ -52,15 +55,7 @@ export class AxiosWrapper {
 			config.headers.Authorization = 'Basic ' + btoa(username + ':' + password);
 		}
 
-		return {
-			...config,
-			signal: config.signal ? (config.signal as AbortSignal) : undefined,
-			adapter:
-				config.adapter !== undefined
-					? (config, defaultAdapter) => config.adapter!(config, defaultAdapter)
-					: undefined,
-			validateStatus: config.validateStatus ? config.validateStatus : undefined
-		};
+		return config;
 	}
 
 	constructor(config: AxiosConfig = {}) {
@@ -71,10 +66,12 @@ export class AxiosWrapper {
 			baseURL: ''
 		});
 
-		this.config = gaxiosConfig;
+		this.baseURL = gaxiosConfig.baseURL;
 	}
 
-	config: HAxiosRequestConfig;
+	get defaults() {
+		return this.gaxiosInstance.defaults;
+	}
 
 	interceptors = {
 		request: new InterceptorManager(),
@@ -85,7 +82,7 @@ export class AxiosWrapper {
 		requestParams: HAxiosRequestConfig<D>
 	): Promise<R> {
 		if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
-			requestParams.baseURL = this.config.baseURL;
+			requestParams.baseURL = this.baseURL;
 			// sanitize baseURL
 			if (!requestParams.baseURL?.endsWith('/') && !requestParams.url?.startsWith('/')) {
 				requestParams.baseURL += '/';
@@ -224,18 +221,18 @@ export class AxiosWrapper {
 	}
 
 	setBaseURL(baseURL: string) {
-		this.config.baseURL = baseURL;
+		this.baseURL = baseURL;
 	}
 
 	setHeader(name: string, value: string) {
 		if (!value) {
-			delete this.config.headers?.[name];
+			delete this.defaults.headers?.[name];
 			return;
 		}
-		if (!this.config.headers) {
-			this.config.headers = {};
+		if (!this.defaults.headers) {
+			this.defaults.headers = {};
 		}
-		this.config.headers[name] = value;
+		this.defaults.headers[name] = value;
 	}
 
 	create(config?: AxiosConfig) {
@@ -255,7 +252,6 @@ export type AxiosStatic = AxiosWrapper &
 
 const enrichedInstance: AxiosStatic = instance.request.bind(instance) as any;
 enrichedInstance.interceptors = instance.interceptors;
-enrichedInstance.config = instance.config;
 
 enrichedInstance.request = instance.request.bind(instance);
 enrichedInstance.getUri = instance.getUri.bind(instance);
