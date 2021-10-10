@@ -1,33 +1,35 @@
 {
-  "name": "haxios",
-  "version": "1.0.15",
-  "description": "full compatible layer for axios based on gaxios",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/hokify/haxios.git"
-  },
-  "scripts": {
-    "test": "mocha",
-    "build": "tsc",
-    "prepublishOnly": "npm run build"
-  },
-  "directories": {
-    "lib": "dist"
-  },
-  "files": [
-    "dist"
-  ],
-  "author": "Simon Tretter <s.tretter@gmail.com>",
-  "license": "ISC",
-  "dependencies": {
-    "gaxios": "^4.3.2"
-  },
-  "devDependencies": {
-    "@types/node": "^16.10.3",
-    "mocha": "^9.1.2",
-    "typescript": "^4.4.3",
-    "prettier": "^2.4.1"
-  }
+	"name": "haxios",
+	"version": "1.0.16",
+	"description": "full compatible layer for axios based on gaxios",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/hokify/haxios.git"
+	},
+	"scripts": {
+		"test": "mocha",
+		"build": "tsc",
+		"prepublishOnly": "npm run build"
+	},
+	"directories": {
+		"lib": "dist"
+	},
+	"files": [
+		"dist"
+	],
+	"author": "Simon Tretter <s.tretter@gmail.com>",
+	"license": "ISC",
+	"dependencies": {
+		"gaxios": "^4.3.2"
+	},
+	"devDependencies": {
+		"@types/node": "^16.10.3",
+		"@types/mocha": "^9.0.0",
+		"mocha": "^9.1.2",
+		"ts-node": "^10.2.1",
+		"typescript": "^4.4.3",
+		"prettier": "^2.4.1"
+	}
 }

@@ -6,11 +6,18 @@
  */
 
 export class Cancel {
-	constructor(private message: string) {}
+	constructor(public readonly message?: string) {}
 
 	toString() {
 		return 'Cancel' + (this.message ? ': ' + this.message : '');
 	}
+}
+
+export type Canceler = (message?: string) => void;
+
+export interface CancelTokenSource {
+	token: CancelToken;
+	cancel: Canceler;
 }
 
 export class CancelToken {
@@ -18,7 +25,11 @@ export class CancelToken {
 	_listeners?: any[];
 	reason?: Cancel;
 
-	constructor(executor: (callback: (message: string) => void) => void) {
+	static isCancel(obj: any): obj is Cancel {
+		return obj instanceof Cancel;
+	}
+
+	constructor(executor: (callback: Canceler) => void) {
 		if (typeof executor !== 'function') {
 			throw new TypeError('executor must be a function.');
 		}
@@ -112,14 +123,15 @@ export class CancelToken {
 	/**
 	 * Returns an object that contains a new `CancelToken` and a function that, when called,
 	 * cancels the `CancelToken`.
-	 */ source() {
-		var cancel;
-		var token = new CancelToken(function executor(c) {
+	 */
+	static source(): CancelTokenSource {
+		let cancel: Canceler;
+		const token = new CancelToken(function executor(c) {
 			cancel = c;
 		});
 		return {
 			token: token,
-			cancel: cancel
+			cancel: cancel!
 		};
 	}
 }

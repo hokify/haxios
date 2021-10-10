@@ -1,5 +1,6 @@
 {
   "spec": "./test/unit/**/*.js",
+  "require": ["ts-node/register"],
   // "timeout": 30000,
   "watch-files": ["./test/unit/**/*.js"],
   "exit": true

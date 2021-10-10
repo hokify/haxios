@@ -1,4 +1,5 @@
 import { GaxiosOptions, GaxiosResponse, RetryConfig } from 'gaxios';
+import type { CancelToken } from './CancelToken';
 
 export interface HAxiosRequestConfig<D = any> extends AxiosConfig {
 	data?: D;
@@ -6,8 +7,15 @@ export interface HAxiosRequestConfig<D = any> extends AxiosConfig {
 	withCredentials?: boolean;
 }
 
-export interface HAxiosResponse<T = any, D = any> extends GaxiosResponse<T> {
+type GaxiosXMLHttpRequest = GaxiosResponse['request']
+
+export interface HaxiosRequest extends GaxiosXMLHttpRequest {
+	path: string;
+}
+
+export interface HAxiosResponse<T = any, D = any> extends Omit<GaxiosResponse<T>, 'request'> {
 	config: HAxiosRequestConfig<D>;
+	request?: HaxiosRequest;
 }
 
 export interface AxiosProxyConfig {
@@ -32,15 +40,9 @@ export interface AxiosResponseTransformer {
     (data: any, headers?: AxiosResponseHeaders): any;
 }*/
 
-export interface Cancel {
-	message: string;
-}
+export interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
 
-export interface CancelToken {
-	promise: Promise<Cancel>;
-	reason?: Cancel;
-	throwIfRequested(): void;
-}
+export type AxiosAdapter = <T = any>(options: AxiosConfig, defaultAdapter: (options: AxiosConfig) => AxiosPromise<T>) => AxiosPromise<T>;
 
 export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
 	// if withCredentials is true, it's set to include

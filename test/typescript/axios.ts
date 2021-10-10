@@ -8,7 +8,7 @@ import axios, {
   CancelToken,
   CancelTokenSource,
   Canceler
-} from '../../';
+} from '../../src';
 
 const config: AxiosRequestConfig = {
   url: '/user',
@@ -44,9 +44,10 @@ const config: AxiosRequestConfig = {
   cancelToken: new axios.CancelToken((cancel: Canceler) => {})
 };
 
+/** thiis is not supported anymore
 const nullValidateStatusConfig: AxiosRequestConfig = {
   validateStatus: null
-};
+};*/
 
 const undefinedValidateStatusConfig: AxiosRequestConfig = {
   validateStatus: undefined
@@ -169,48 +170,48 @@ axios.patch<User>('/user', { name: 'foo', id: 1 })
 
 // (Typed methods) with custom response type
 
-const handleStringResponse = (response: string) => {
-  console.log(response)
+const handleStringResponse = (response: AxiosResponse<string>) => {
+  console.log(response.data)
 }
 
-axios.get<User, string>('/user?id=12345')
+axios.get<string, User>('/user?id=12345')
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.get<User, string>('/user', { params: { id: 12345 } })
+axios.get<string, User>('/user', { params: { id: 12345 } })
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.head<User, string>('/user')
+axios.head<string, User>('/user')
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.options<User, string>('/user')
+axios.options<string, User>('/user')
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.delete<User, string>('/user')
+axios.delete<string, User>('/user')
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.post<Partial<UserCreationDef>, string>('/user', { name: 'foo' })
+axios.post<string, Partial<UserCreationDef>>('/user', { name: 'foo' })
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.post<Partial<UserCreationDef>, string>('/user', { name: 'foo' }, { headers: { 'X-FOO': 'bar' } })
+axios.post<string, Partial<UserCreationDef>>('/user', { name: 'foo' }, { headers: { 'X-FOO': 'bar' } })
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.put<Partial<UserCreationDef>, string>('/user', { name: 'foo' })
+axios.put< string, Partial<UserCreationDef>>('/user', { name: 'foo' })
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.patch<Partial<UserCreationDef>, string>('/user', { name: 'foo' })
+axios.patch<string, Partial<UserCreationDef>>('/user', { name: 'foo' })
   .then(handleStringResponse)
   .catch(handleError);
 
-axios.request<User, string>({
-  method: 'get',
+axios.request<string, User>({
+  method: 'GET',
   url: '/user?id=12345'
 })
   .then(handleStringResponse)
@@ -308,6 +309,7 @@ const adapter: AxiosAdapter = (config: AxiosRequestConfig) => {
 
 axios.defaults.adapter = adapter;
 
+/** axios.all not supported aynmore
 // axios.all
 
 const promises = [
@@ -316,11 +318,14 @@ const promises = [
 ];
 
 const promise: Promise<number[]> = axios.all(promises);
+*/
 
+/** axois.spread not supported anymore
 // axios.spread
 
 const fn1 = (a: number, b: number, c: number) => `${a}-${b}-${c}`;
 const fn2: (arr: number[]) => string = axios.spread(fn1);
+*/
 
 // Promises
 
@@ -342,11 +347,11 @@ axios.get('/user')
 
 axios.get('/user')
   .catch((error: any) => 'foo')
-  .then((value: string) => {});
+  .then((value: string | AxiosResponse<string>) => {});
 
 axios.get('/user')
   .catch((error: any) => Promise.resolve('foo'))
-  .then((value: string) => {});
+  .then((value: string | AxiosResponse<string>) => {});
 
 // Cancellation
 

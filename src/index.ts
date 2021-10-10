@@ -1,11 +1,11 @@
-import { AbortSignal } from 'abort-controller';
-
 import * as Gaxios from 'gaxios';
 import { InterceptorHandler, InterceptorManager } from './InterceptorManager';
-import { AxiosConfig, HAxiosRequestConfig, HAxiosResponse } from './axios';
-import { GaxiosError, GaxiosOptions } from 'gaxios';
+import { AxiosAdapter, AxiosConfig, HAxiosRequestConfig, HAxiosResponse } from './axios';
+import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
-import { CancelToken } from './CancelToken';
+import { Cancel, CancelToken } from './CancelToken';
+
+export type { Cancel, Canceler, CancelToken, CancelTokenSource } from './CancelToken';
 
 export * from './axios';
 
@@ -14,6 +14,8 @@ export type { HAxiosResponse as AxiosResponse };
 export type { HAxiosRequestConfig as AxiosRequestConfig };
 
 export type Method = GaxiosOptions['method'];
+
+type HaxiosOptions = GaxiosOptions & { headers: Headers; adapter?: AxiosAdapter; compress?: boolean };
 
 const creatAxiosError = (
 	message: string,
@@ -30,7 +32,7 @@ export class AxiosWrapper {
 
 	baseURL?: string;
 
-	private transformAxiosConfigToGaxios(config: AxiosConfig): GaxiosOptions {
+	private transformAxiosConfigToGaxios(config: AxiosConfig, noDefaults = false): GaxiosOptions {
 		if (config.timeout) {
 			const timeout = parseInt(config.timeout as any, 10);
 
@@ -44,20 +46,39 @@ export class AxiosWrapper {
 
 			config.timeout = timeout;
 		}
+		if (!config.headers) config.headers = {};
+		var headerNames = {};
+		Object.keys(config.headers).forEach((name) => {
+			headerNames[name.toLowerCase()] = name;
+		});
 
 		// HTTP basic authentication
 		if (config.auth) {
 			var username = config.auth.username || '';
 			var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
 
-			if (!config.headers) config.headers = {};
 			// todo: get rid of btoa
-			config.headers.Authorization = 'Basic ' + btoa(username + ':' + password);
+			config.headers[headerNames['authorization'] || 'Authorization'] = 'Basic ' + btoa(username + ':' + password);
 		}
-
 
 		if (config.withCredentials) {
 			config.credentials = 'include';
+		}
+
+		if (!noDefaults) {
+			// Set User-Agent (required by some servers)
+			// See https://github.com/axios/axios/issues/69
+			if ('user-agent' in headerNames) {
+				// User-Agent is specified; handle case where no UA header is desired
+				if (!config.headers[headerNames['user-agent']]) {
+					delete config.headers[headerNames['user-agent']];
+				}
+				// Otherwise, use specified value
+			} else {
+				// Only set header if it hasn't been set in config
+				// todo get package version in prebuild step
+				config.headers['User-Agent'] = 'axios/haxios/' + 'TODO_VERSION';
+			}
 		}
 
 		const setContentTypeIfUnset = (contentType: string) => {
@@ -69,8 +90,6 @@ export class AxiosWrapper {
 		if (typeof URLSearchParams !== 'undefined' && config.data instanceof URLSearchParams) {
 			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
 			config.data = config.data.toString();
-
-			console.log('config.headers[\'Content-Type\']', config.headers?.['Content-Type']);
 		}
 
 		if (
@@ -83,12 +102,44 @@ export class AxiosWrapper {
 			config.data = JSON.stringify(config.data);
 		}
 
+		if (!config.adapter) {
+			config.adapter = (async (options, defaultAdapter) => {
+				try {
+					const result = (await defaultAdapter(options)) as HAxiosResponse;
+
+					try {
+						if (result.request?.responseURL) {
+							const myURL = new URL(result.request.responseURL);
+
+							result.request = {
+								...myURL,
+								// backward compatiblity
+								path: myURL.pathname?.toString() || '',
+								responseURL: result.request.responseURL
+							};
+						}
+					} catch (err) {
+						console.info('parsing failed', err);
+					}
+					return result;
+				} catch (err: any) {
+					throw err;
+				}
+			}) as HaxiosOptions['adapter'];
+		}
+
+		if (config.decompress !== undefined && (config as HaxiosOptions).compress === undefined) {
+			(config as HaxiosOptions).compress = config.decompress;
+		}
+
 		return config;
 	}
 
-	constructor(config: AxiosConfig = {}) {
-		const gaxiosConfig = this.transformAxiosConfigToGaxios(config);
+	constructor(config: AxiosConfig = { headers: {} }) {
+		const gaxiosConfig = this.transformAxiosConfigToGaxios(config, true);
 		this.gaxiosInstance = new Gaxios.Gaxios({
+			// ensure headers object is intiialized
+			headers: {},
 			...gaxiosConfig,
 			// set baseURL on request time
 			baseURL: ''
@@ -97,8 +148,8 @@ export class AxiosWrapper {
 		this.baseURL = gaxiosConfig.baseURL;
 	}
 
-	get defaults() {
-		return this.gaxiosInstance.defaults;
+	get defaults(): HaxiosOptions {
+		return this.gaxiosInstance.defaults as HaxiosOptions;
 	}
 
 	interceptors = {
@@ -106,7 +157,7 @@ export class AxiosWrapper {
 		response: new InterceptorManager()
 	};
 
-	async request<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	async request<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		requestParams: HAxiosRequestConfig<D>
 	): Promise<R> {
 		try {
@@ -200,35 +251,35 @@ export class AxiosWrapper {
 		return this.request(config);
 	}
 
-	get<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	get<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
 		return this.request({ url, method: 'GET', ...config });
 	}
 
-	delete<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	delete<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
 		return this.request({ url, method: 'DELETE', ...config });
 	}
 
-	head<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	head<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
 		return this.request({ url, method: 'HEAD', ...config });
 	}
 
-	options<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	options<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
 		return this.request({ url, method: 'OPTIONS', ...config });
 	}
 
-	post<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	post<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		data?: D,
 		config?: HAxiosRequestConfig<D>
@@ -236,7 +287,7 @@ export class AxiosWrapper {
 		return this.request({ url, method: 'POST', data, ...config });
 	}
 
-	put<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	put<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		data?: D,
 		config?: HAxiosRequestConfig<D>
@@ -244,7 +295,7 @@ export class AxiosWrapper {
 		return this.request({ url, method: 'PUT', data, ...config });
 	}
 
-	patch<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
+	patch<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
 		url: string,
 		data?: D,
 		config?: HAxiosRequestConfig<D>
@@ -267,38 +318,45 @@ export class AxiosWrapper {
 		this.defaults.headers[name] = value;
 	}
 
-	create(config?: AxiosConfig) {
-		return new AxiosWrapper(config);
+	create(config?: AxiosConfig): AxiosInstance {
+		return AxiosWrapper.create(config);
+	}
+
+	static create(config?: AxiosConfig): AxiosInstance {
+		const instance = new AxiosWrapper(config);
+
+		const enrichedInstance: AxiosInstance = instance.request.bind(instance) as AxiosInstance;
+
+		enrichedInstance.request = instance.request.bind(instance);
+		enrichedInstance.getUri = instance.getUri.bind(instance);
+		enrichedInstance.get = instance.get.bind(instance);
+		enrichedInstance.delete = instance.delete.bind(instance);
+		enrichedInstance.head = instance.head.bind(instance);
+		enrichedInstance.options = instance.options.bind(instance);
+		enrichedInstance.post = instance.post.bind(instance);
+		enrichedInstance.put = instance.put.bind(instance);
+		enrichedInstance.patch = instance.patch.bind(instance);
+
+		enrichedInstance.setBaseURL = instance.setBaseURL.bind(instance);
+		enrichedInstance.setHeader = instance.setHeader.bind(instance);
+		enrichedInstance.create = instance.create.bind(instance);
+
+		return enrichedInstance;
 	}
 }
 
-const instance = new AxiosWrapper();
+export type AxiosInstance = AxiosWrapper & AxiosWrapper['request'];
 
-interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
-export type { AxiosPromise, AxiosWrapper as AxiosInstance };
+const enrichedInstance: AxiosStatic = AxiosWrapper.create() as AxiosStatic;
 
-export type AxiosStatic = AxiosWrapper &
-	AxiosWrapper['request'] & {
-		isAxiosError: (err: any) => err is GaxiosError;
-	} & { CancelToken: typeof CancelToken };
+export type AxiosStatic = AxiosInstance & {
+	isAxiosError: (err: any) => err is GaxiosError;
+	CancelToken: typeof CancelToken;
+	isCancel: (err: any) => err is Cancel;
+};
 
-const enrichedInstance: AxiosStatic = instance.request.bind(instance) as any;
-enrichedInstance.interceptors = instance.interceptors;
-
-enrichedInstance.request = instance.request.bind(instance);
-enrichedInstance.getUri = instance.getUri.bind(instance);
-enrichedInstance.get = instance.get.bind(instance);
-enrichedInstance.delete = instance.delete.bind(instance);
-enrichedInstance.head = instance.head.bind(instance);
-enrichedInstance.options = instance.options.bind(instance);
-enrichedInstance.post = instance.post.bind(instance);
-enrichedInstance.put = instance.put.bind(instance);
-enrichedInstance.patch = instance.patch.bind(instance);
-
-enrichedInstance.setBaseURL = instance.setBaseURL.bind(instance);
-enrichedInstance.setHeader = instance.setHeader.bind(instance);
-enrichedInstance.create = instance.create.bind(instance);
 enrichedInstance.isAxiosError = (err: any): err is GaxiosError => err instanceof GaxiosError;
 enrichedInstance.CancelToken = CancelToken;
+enrichedInstance.isCancel = CancelToken.isCancel;
 
 export default enrichedInstance;
