@@ -1,6 +1,6 @@
 {
 	"name": "haxios",
-	"version": "1.0.16",
+	"version": "1.0.17",
 	"description": "full compatible layer for axios based on gaxios",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",

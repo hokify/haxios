@@ -15,7 +15,11 @@ export type { HAxiosRequestConfig as AxiosRequestConfig };
 
 export type Method = GaxiosOptions['method'];
 
-type HaxiosOptions = GaxiosOptions & { headers: Headers; adapter?: AxiosAdapter; compress?: boolean };
+type HaxiosOptions = GaxiosOptions & {
+	headers: Headers;
+	adapter?: AxiosAdapter;
+	compress?: boolean;
+};
 
 const creatAxiosError = (
 	message: string,
@@ -48,7 +52,7 @@ export class AxiosWrapper {
 		}
 		if (!config.headers) config.headers = {};
 		var headerNames = {};
-		Object.keys(config.headers).forEach((name) => {
+		Object.keys(config.headers).forEach(name => {
 			headerNames[name.toLowerCase()] = name;
 		});
 
@@ -58,7 +62,8 @@ export class AxiosWrapper {
 			var password = config.auth.password ? unescape(encodeURIComponent(config.auth.password)) : '';
 
 			// todo: get rid of btoa
-			config.headers[headerNames['authorization'] || 'Authorization'] = 'Basic ' + btoa(username + ':' + password);
+			config.headers[headerNames['authorization'] || 'Authorization'] =
+				'Basic ' + btoa(username + ':' + password);
 		}
 
 		if (config.withCredentials) {
@@ -327,6 +332,9 @@ export class AxiosWrapper {
 
 		const enrichedInstance: AxiosInstance = instance.request.bind(instance) as AxiosInstance;
 
+		enrichedInstance.interceptors = instance.interceptors;
+		enrichedInstance.defaults = instance.defaults;
+
 		enrichedInstance.request = instance.request.bind(instance);
 		enrichedInstance.getUri = instance.getUri.bind(instance);
 		enrichedInstance.get = instance.get.bind(instance);
@@ -345,7 +353,7 @@ export class AxiosWrapper {
 	}
 }
 
-export type AxiosInstance = AxiosWrapper & AxiosWrapper['request'];
+export type AxiosInstance = Omit<AxiosWrapper, 'defaults'> & AxiosWrapper['request'] & { defaults: HaxiosOptions };
 
 const enrichedInstance: AxiosStatic = AxiosWrapper.create() as AxiosStatic;
 
