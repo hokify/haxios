@@ -97,7 +97,13 @@ export class AxiosWrapper {
 			config.data = config.data.toString();
 		}
 
-		if (
+		let originalData;
+		if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+			/** special formdata handlin gvia config.adpater! */
+			delete config.headers['Content-Type']; // Let the browser set it
+			originalData = config.data;
+			config.data = undefined;
+		} else if (
 			(config.data !== null && typeof config.data === 'object') ||
 			// this condition doesn't fully make sense to me, but it's the
 			// same logic as in axios: https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/lib/defaults.js#L74
@@ -110,6 +116,13 @@ export class AxiosWrapper {
 		if (!config.adapter) {
 			config.adapter = (async (options, defaultAdapter) => {
 				try {
+					// reapply formdata
+					// due to a bug/missing functionality in gaxios, data is parsed as json
+					if (originalData && typeof FormData !== 'undefined' && originalData instanceof FormData) {
+						options.body = originalData;
+						delete options.headers['Content-Type']; // Let the browser set it
+					}
+
 					const result = (await defaultAdapter(options)) as HAxiosResponse;
 
 					try {
@@ -353,7 +366,8 @@ export class AxiosWrapper {
 	}
 }
 
-export type AxiosInstance = Omit<AxiosWrapper, 'defaults'> & AxiosWrapper['request'] & { defaults: HaxiosOptions };
+export type AxiosInstance = Omit<AxiosWrapper, 'defaults'> &
+	AxiosWrapper['request'] & { defaults: HaxiosOptions };
 
 const enrichedInstance: AxiosStatic = AxiosWrapper.create() as AxiosStatic;
 
