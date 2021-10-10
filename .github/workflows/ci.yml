@@ -22,5 +22,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm install
       - run: npm run build
-      - run: mocha
-      - run: karma start
+      - name: run mocha test suite
+        run: npx mocha
+      - name: run karma test suite
+        run: npx karma start
