@@ -201,7 +201,7 @@ export class AxiosWrapper {
 		data?: D,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
-		return this.request({ url, method: 'POST', ...config });
+		return this.request({ url, method: 'POST', data, ...config });
 	}
 
 	put<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
@@ -209,7 +209,7 @@ export class AxiosWrapper {
 		data?: D,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
-		return this.request({ url, method: 'PUT', ...config });
+		return this.request({ url, method: 'PUT', data, ...config });
 	}
 
 	patch<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>, D = any>(
@@ -217,7 +217,7 @@ export class AxiosWrapper {
 		data?: D,
 		config?: HAxiosRequestConfig<D>
 	): Promise<R> {
-		return this.request({ url, method: 'PATCH', ...config });
+		return this.request({ url, method: 'PATCH', data, ...config });
 	}
 
 	setBaseURL(baseURL: string) {
