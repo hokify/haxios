@@ -99,7 +99,8 @@ export class AxiosWrapper {
 
 		let originalData;
 		if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
-			/** special formdata handlin gvia config.adpater! */
+			/** special formdata handling via config.adpater!
+			 * see https://github.com/googleapis/gaxios/issues/447 */
 			delete config.headers['Content-Type']; // Let the browser set it
 			originalData = config.data;
 			config.data = undefined;
@@ -118,6 +119,7 @@ export class AxiosWrapper {
 				try {
 					// reapply formdata
 					// due to a bug/missing functionality in gaxios, data is parsed as json
+					// see https://github.com/googleapis/gaxios/issues/447
 					if (originalData && typeof FormData !== 'undefined' && originalData instanceof FormData) {
 						options.body = originalData;
 						delete options.headers['Content-Type']; // Let the browser set it
