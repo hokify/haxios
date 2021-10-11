@@ -113,11 +113,9 @@ export class AxiosWrapper {
 		) {
 			/** special formdata handling via config.adapter!
 			 * see https://github.com/googleapis/gaxios/issues/447 */
-			delete config.headers['Content-Type']; // Let the browser set it
 			originalData = config.data;
 			config.data = undefined;
 		} else if (isArrayBufferView(config.data)) {
-			delete config.headers['Content-Type']; // Let the browser set it
 			originalData = config.data.buffer;
 			config.data = undefined;
 		} else if (isURLSearchParams(config.data)) {
