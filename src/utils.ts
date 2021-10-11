@@ -45,11 +45,7 @@ export function isArrayBuffer(val) {
  * @returns {boolean} True if value is an FormData, otherwise false
  */
 export function isFormData(obj) {
-	const prototype = Object.getPrototypeOf(obj);
-	console.log('prototype', prototype);
-	return (
-		(typeof FormData !== 'undefined' && obj instanceof FormData) || prototype?.name === 'FormData'
-	);
+	return typeof FormData !== 'undefined' && obj instanceof FormData;
 }
 
 export function isPlainObject(obj) {

@@ -37,7 +37,7 @@ export class AxiosWrapper {
 
 	baseURL?: string;
 
-	private transformAxiosConfigToGaxios(config: AxiosConfig, noDefaults = false): GaxiosOptions {
+	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
 		if (config.timeout) {
 			const timeout = parseInt(config.timeout as any, 10);
 
@@ -71,7 +71,7 @@ export class AxiosWrapper {
 			config.credentials = 'include';
 		}
 
-		if (!noDefaults) {
+		if (!initialize) {
 			// Set User-Agent (required by some servers)
 			// See https://github.com/axios/axios/issues/69
 			if ('user-agent' in headerNames) {
@@ -83,13 +83,16 @@ export class AxiosWrapper {
 			} else {
 				// Only set header if it hasn't been set in config
 				// todo get package version in prebuild step
-				config.headers['User-Agent'] = 'axios/haxios/' + 'TODO_VERSION';
+				config.headers['User-Agent'] = 'haxios';
 			}
 		}
 
 		const setContentTypeIfUnset = (contentType: string) => {
+			if ('content-type' in headerNames) {
+				// is set already
+				return;
+			}
 			if (!config.headers) config.headers = {};
-
 			config.headers['Content-Type'] = contentType;
 		};
 
@@ -110,7 +113,7 @@ export class AxiosWrapper {
 			config.data = undefined;
 		}
 
-		if (!config.adapter) {
+		if (!config.adapter && !initialize) {
 			config.adapter = (async (options, defaultAdapter) => {
 				try {
 					// reapply original data
