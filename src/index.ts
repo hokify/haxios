@@ -201,7 +201,10 @@ export class AxiosWrapper {
 	): Promise<R> {
 		try {
 			if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
-				requestParams.baseURL = this.baseURL;
+				// set default baseURL is on baseURL is provided
+				if (!requestParams.baseURL) {
+					requestParams.baseURL = this.baseURL;
+				}
 				// sanitize baseURL
 				if (!requestParams.baseURL?.endsWith('/') && !requestParams.url?.startsWith('/')) {
 					requestParams.baseURL += '/';
