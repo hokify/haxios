@@ -71,7 +71,8 @@ export class AxiosWrapper {
 			config.credentials = 'include';
 		}
 
-		if (!initialize) {
+		// only on server
+		if (typeof window === 'undefined' && !initialize) {
 			// Set User-Agent (required by some servers)
 			// See https://github.com/axios/axios/issues/69
 			if ('user-agent' in headerNames) {
