@@ -5,14 +5,10 @@ import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
 import { Cancel, CancelToken } from './CancelToken';
 import {
-	isArrayBuffer,
-	isArrayBufferView,
-	isBlob,
-	isBuffer,
-	isFile,
 	isFormData,
-	isStream,
-	isURLSearchParams
+	isPlainObject,
+	isURLSearchParams,
+	isArrayBufferView
 } from './utils';
 
 export type { Cancel, Canceler, CancelToken, CancelTokenSource } from './CancelToken';
@@ -104,31 +100,21 @@ export class AxiosWrapper {
 
 		let originalData: any | undefined;
 		if (
-			isFormData(config.data) ||
-			isArrayBuffer(config.data) ||
-			isBuffer(config.data) ||
-			isStream(config.data) ||
-			isFile(config.data) ||
-			isBlob(config.data)
+			config.data && isPlainObject(config.data)
 		) {
-			/** special formdata handling via config.adapter!
-			 * see https://github.com/googleapis/gaxios/issues/447 */
-			originalData = config.data;
-			config.data = undefined;
+			setContentTypeIfUnset('application/json');
+			config.data = JSON.stringify(config.data);
 		} else if (isArrayBufferView(config.data)) {
 			originalData = config.data.buffer;
 			config.data = undefined;
 		} else if (isURLSearchParams(config.data)) {
 			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
 			config.data = config.data.toString();
-		} else if (
-			(config.data !== null && typeof config.data === 'object') ||
-			// this condition doesn't fully make sense to me, but it's the
-			// same logic as in axios: https://github.com/axios/axios/blob/76f09afc03fbcf392d31ce88448246bcd4f91f8c/lib/defaults.js#L74
-			config.headers?.['Content-Type'] === 'application/json'
-		) {
-			setContentTypeIfUnset('application/json');
-			config.data = JSON.stringify(config.data);
+		} else if (config.data) {
+			/** special handling via config.adapter!
+			 * see https://github.com/googleapis/gaxios/issues/447 */
+			originalData = config.data;
+			config.data = undefined;
 		}
 
 		if (!config.adapter) {

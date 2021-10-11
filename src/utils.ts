@@ -3,6 +3,7 @@
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if the value is undefined, otherwise false
+ * @deprecated
  */
 export function isUndefined(val) {
     return typeof val === 'undefined';
@@ -13,6 +14,7 @@ export function isUndefined(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Buffer, otherwise false
+ * @deprecated
  */
 export function isBuffer(val) {
     return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
@@ -24,6 +26,7 @@ export function isBuffer(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an ArrayBuffer, otherwise false
+ * @deprecated
  */
 export function isArrayBuffer(val) {
     return toString.call(val) === '[object ArrayBuffer]';
@@ -35,8 +38,15 @@ export function isArrayBuffer(val) {
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an FormData, otherwise false
  */
-export function isFormData(val) {
-    return (typeof FormData !== 'undefined') && (val instanceof FormData);
+export function isFormData(obj) {
+    const prototype = Object.getPrototypeOf(obj);
+    console.log('prototype', prototype);
+    return (typeof FormData !== 'undefined' && obj instanceof FormData) || prototype?.name === 'FormData';
+}
+
+export function isPlainObject(obj) {
+    const prototype = Object.getPrototypeOf(obj);
+    return prototype === null || prototype.constructor === Object;
 }
 
 /**
@@ -60,6 +70,7 @@ export function isArrayBufferView(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is an Object, otherwise false
+ * @deprecated
  */
 export function isObject(val) {
     return val !== null && typeof val === 'object';
@@ -71,6 +82,7 @@ export function isObject(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Function, otherwise false
+ * @deprecated
  */
 export function isFunction(val) {
     return toString.call(val) === '[object Function]';
@@ -81,6 +93,7 @@ export function isFunction(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Stream, otherwise false
+ * @deprecated
  */
 export function isStream(val) {
     return isObject(val) && isFunction(val.pipe);
@@ -101,6 +114,7 @@ export function isURLSearchParams(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a File, otherwise false
+ * @deprecated
  */
 export function isFile(val) {
     return toString.call(val) === '[object File]';
@@ -111,6 +125,7 @@ export function isFile(val) {
  *
  * @param {Object} val The value to test
  * @returns {boolean} True if value is a Blob, otherwise false
+ * @deprecated
  */
 export function isBlob(val) {
     return toString.call(val) === '[object Blob]';
