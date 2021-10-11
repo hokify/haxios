@@ -4,12 +4,7 @@ import { AxiosAdapter, AxiosConfig, HAxiosRequestConfig, HAxiosResponse } from '
 import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
 import { Cancel, CancelToken } from './CancelToken';
-import {
-	isFormData,
-	isPlainObject,
-	isURLSearchParams,
-	isArrayBufferView
-} from './utils';
+import { isFormData, isPlainObject, isURLSearchParams, isArrayBufferView } from './utils';
 
 export type { Cancel, Canceler, CancelToken, CancelTokenSource } from './CancelToken';
 
@@ -99,9 +94,7 @@ export class AxiosWrapper {
 		};
 
 		let originalData: any | undefined;
-		if (
-			config.data && isPlainObject(config.data)
-		) {
+		if (typeof config.data === 'object' && isPlainObject(config.data)) {
 			setContentTypeIfUnset('application/json');
 			config.data = JSON.stringify(config.data);
 		} else if (isArrayBufferView(config.data)) {

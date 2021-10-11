@@ -6,7 +6,7 @@
  * @deprecated
  */
 export function isUndefined(val) {
-    return typeof val === 'undefined';
+	return typeof val === 'undefined';
 }
 
 /**
@@ -17,8 +17,14 @@ export function isUndefined(val) {
  * @deprecated
  */
 export function isBuffer(val) {
-    return val !== null && !isUndefined(val) && val.constructor !== null && !isUndefined(val.constructor)
-        && typeof val.constructor.isBuffer === 'function' && val.constructor.isBuffer(val);
+	return (
+		val !== null &&
+		!isUndefined(val) &&
+		val.constructor !== null &&
+		!isUndefined(val.constructor) &&
+		typeof val.constructor.isBuffer === 'function' &&
+		val.constructor.isBuffer(val)
+	);
 }
 
 /**
@@ -29,7 +35,7 @@ export function isBuffer(val) {
  * @deprecated
  */
 export function isArrayBuffer(val) {
-    return toString.call(val) === '[object ArrayBuffer]';
+	return toString.call(val) === '[object ArrayBuffer]';
 }
 
 /**
@@ -39,14 +45,16 @@ export function isArrayBuffer(val) {
  * @returns {boolean} True if value is an FormData, otherwise false
  */
 export function isFormData(obj) {
-    const prototype = Object.getPrototypeOf(obj);
-    console.log('prototype', prototype);
-    return (typeof FormData !== 'undefined' && obj instanceof FormData) || prototype?.name === 'FormData';
+	const prototype = Object.getPrototypeOf(obj);
+	console.log('prototype', prototype);
+	return (
+		(typeof FormData !== 'undefined' && obj instanceof FormData) || prototype?.name === 'FormData'
+	);
 }
 
 export function isPlainObject(obj) {
-    const prototype = Object.getPrototypeOf(obj);
-    return prototype === null || prototype.constructor === Object;
+	const prototype = Object.getPrototypeOf(obj);
+	return prototype === null || prototype.constructor === Object;
 }
 
 /**
@@ -56,13 +64,13 @@ export function isPlainObject(obj) {
  * @returns {boolean} True if value is a view on an ArrayBuffer, otherwise false
  */
 export function isArrayBufferView(val) {
-    var result;
-    if ((typeof ArrayBuffer !== 'undefined') && (ArrayBuffer.isView)) {
-        result = ArrayBuffer.isView(val);
-    } else {
-        result = (val) && (val.buffer) && (val.buffer instanceof ArrayBuffer);
-    }
-    return result;
+	var result;
+	if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView) {
+		result = ArrayBuffer.isView(val);
+	} else {
+		result = val && val.buffer && val.buffer instanceof ArrayBuffer;
+	}
+	return result;
 }
 
 /**
@@ -73,9 +81,8 @@ export function isArrayBufferView(val) {
  * @deprecated
  */
 export function isObject(val) {
-    return val !== null && typeof val === 'object';
+	return val !== null && typeof val === 'object';
 }
-
 
 /**
  * Determine if a value is a Function
@@ -85,7 +92,7 @@ export function isObject(val) {
  * @deprecated
  */
 export function isFunction(val) {
-    return toString.call(val) === '[object Function]';
+	return toString.call(val) === '[object Function]';
 }
 
 /**
@@ -96,7 +103,7 @@ export function isFunction(val) {
  * @deprecated
  */
 export function isStream(val) {
-    return isObject(val) && isFunction(val.pipe);
+	return isObject(val) && isFunction(val.pipe);
 }
 
 /**
@@ -106,7 +113,7 @@ export function isStream(val) {
  * @returns {boolean} True if value is a URLSearchParams object, otherwise false
  */
 export function isURLSearchParams(val) {
-    return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
+	return typeof URLSearchParams !== 'undefined' && val instanceof URLSearchParams;
 }
 
 /**
@@ -117,7 +124,7 @@ export function isURLSearchParams(val) {
  * @deprecated
  */
 export function isFile(val) {
-    return toString.call(val) === '[object File]';
+	return toString.call(val) === '[object File]';
 }
 
 /**
@@ -128,5 +135,5 @@ export function isFile(val) {
  * @deprecated
  */
 export function isBlob(val) {
-    return toString.call(val) === '[object Blob]';
+	return toString.call(val) === '[object Blob]';
 }
