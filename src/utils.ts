@@ -50,7 +50,7 @@ export function isFormData(obj) {
 
 export function isPlainObject(obj) {
 	const prototype = Object.getPrototypeOf(obj);
-	return prototype === null || prototype.constructor === Object;
+    	return prototype === null || prototype.constructor === Object || prototype.constructor === null || prototype.toString() === '[object Object]';
 }
 
 /**
