@@ -1,20 +1,53 @@
 import { GaxiosOptions, GaxiosResponse, RetryConfig } from 'gaxios';
 import type { CancelToken } from './CancelToken';
 
-export interface HAxiosRequestConfig<D = any> extends AxiosConfig {
+type HaxiosRequestArrayBufferConfig<D> = HAxiosRequestConfigBase<D> & {
+	responseType: 'arraybuffer';
+};
+type HaxiosRequestJsonConfig<D> = HAxiosRequestConfigBase<D> & {
+	responseType?: 'json' | undefined;
+};
+type HaxiosRequestTextConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'text' };
+type HaxiosRequestStreamConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'stream' };
+type HaxiosRequestBlobConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'blob' };
+
+export type HAxiosRequestConfig<D = any> =
+	| HaxiosRequestArrayBufferConfig<D>
+	| HaxiosRequestJsonConfig<D>
+	| HaxiosRequestTextConfig<D>
+	| HaxiosRequestStreamConfig<D>
+	| HaxiosRequestBlobConfig<D>;
+
+interface HAxiosRequestConfigBase<D = any> extends Omit<AxiosConfig, 'responseType'> {
 	data?: D;
 	onDownloadProgress?: (progressEvent: any) => void;
 	withCredentials?: boolean;
 }
 
-type GaxiosXMLHttpRequest = GaxiosResponse['request']
+type GaxiosXMLHttpRequest = GaxiosResponse['request'];
 
 export interface HaxiosRequest extends GaxiosXMLHttpRequest {
 	path: string;
 }
 
-export interface HAxiosResponse<T = any, D = any> extends Omit<GaxiosResponse<T>, 'request'> {
-	config: HAxiosRequestConfig<D>;
+type HaxiosRETURN<RETURN, INPUT, CONFIG> = CONFIG extends HaxiosRequestArrayBufferConfig<INPUT>
+	? ArrayBuffer
+	: CONFIG extends HaxiosRequestJsonConfig<INPUT>
+		? RETURN
+		: CONFIG extends HaxiosRequestTextConfig<INPUT>
+			? string
+			: CONFIG extends HaxiosRequestStreamConfig<INPUT>
+				? ReadableStream
+				: unknown
+
+export interface HAxiosResponse<RETURN = any, INPUT = any, CONFIG extends HAxiosRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>>
+	extends Omit<
+		GaxiosResponse<
+			HaxiosRETURN<RETURN,INPUT,CONFIG>
+		>,
+		'request'
+	> {
+	config: HAxiosRequestConfig<INPUT>;
 	request?: HaxiosRequest;
 }
 
@@ -40,9 +73,12 @@ export interface AxiosResponseTransformer {
     (data: any, headers?: AxiosResponseHeaders): any;
 }*/
 
-export interface AxiosPromise<T = any> extends Promise<HAxiosResponse> {}
+export interface AxiosPromise<RETURN = any> extends Promise<HAxiosResponse> {}
 
-export type AxiosAdapter = <T = any>(options: AxiosConfig, defaultAdapter: (options: AxiosConfig) => AxiosPromise<T>) => AxiosPromise<T>;
+export type AxiosAdapter = <RETURN = any>(
+	options: AxiosConfig,
+	defaultAdapter: (options: AxiosConfig) => AxiosPromise<RETURN>
+) => AxiosPromise<RETURN>;
 
 export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
 	// if withCredentials is true, it's set to include

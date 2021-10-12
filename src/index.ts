@@ -145,11 +145,6 @@ export class AxiosWrapper {
 						console.info('parsing failed', err);
 					}
 
-					// convert arraybuffer to buffer
-					if (!isBrowser && result instanceof ArrayBuffer) {
-						return Buffer.from(result);
-					}
-
 					return result;
 				} catch (err: any) {
 					throw err;
@@ -186,9 +181,11 @@ export class AxiosWrapper {
 		response: new InterceptorManager()
 	};
 
-	async request<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		requestParams: HAxiosRequestConfig<D>
-	): Promise<R> {
+	async request<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(requestParams: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		try {
 			if (!requestParams.url?.startsWith('http://') && !requestParams.url?.startsWith('https://')) {
 				// set default baseURL is on baseURL is provided
@@ -277,62 +274,80 @@ export class AxiosWrapper {
 		}
 	}
 
-	getUri<T = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		config: HAxiosRequestConfig
-	): Promise<R> {
+	get<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'GET', ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
+	}
+
+	getUri<RETURN = any, CONFIG extends HAxiosRequestConfig<never> = HAxiosRequestConfig<never>>(
+		config: CONFIG
+	): Promise<HAxiosResponse<RETURN, never, CONFIG>> {
 		return this.request(config);
 	}
 
-	get<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'GET', ...config });
+	delete<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'DELETE', ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
-	delete<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'DELETE', ...config });
+	head<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'HEAD', ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
-	head<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'HEAD', ...config });
+	options<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'OPTIONS', ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
-	options<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'OPTIONS', ...config });
+	post<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'POST', data, ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
-	post<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		data?: D,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'POST', data, ...config });
+	put<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'PUT', data, ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
-	put<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		data?: D,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'PUT', data, ...config });
-	}
-
-	patch<T = any, D = any, R extends HAxiosResponse<T> = HAxiosResponse<T>>(
-		url: string,
-		data?: D,
-		config?: HAxiosRequestConfig<D>
-	): Promise<R> {
-		return this.request({ url, method: 'PATCH', data, ...config });
+	patch<
+		RETURN = any,
+		INPUT = any,
+		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
+		return this.request({ url, method: 'PATCH', data, ...config }) as Promise<
+			HAxiosResponse<RETURN, INPUT, CONFIG>
+		>;
 	}
 
 	setBaseURL(baseURL: string) {

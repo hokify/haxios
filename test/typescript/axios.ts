@@ -250,8 +250,18 @@ instance1.post('/user', { foo: 'bar' }, { headers: { 'X-FOO': 'bar' } })
   .then(handleResponse)
   .catch(handleError);
 
-// Defaults
+(async () => {
+    const arrayBuffer = (a: ArrayBuffer) => {
+    }
+    const str = (a: string) => {
+    }
 
+    const x = await instance1.get('/x', {responseType: 'arraybuffer'});
+    arrayBuffer(x.data);
+    // str(x.data);
+})();
+
+// Defaults
 axios.defaults.baseURL = 'https://api.example.com/';
 axios.defaults.headers.common['Authorization'] = 'token';
 axios.defaults.headers.post['X-FOO'] = 'bar';
