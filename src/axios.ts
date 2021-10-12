@@ -18,7 +18,7 @@ export type HAxiosRequestConfig<D = any> =
 	| HaxiosRequestStreamConfig<D>
 	| HaxiosRequestBlobConfig<D>;
 
-interface HAxiosRequestConfigBase<D = any> extends Omit<AxiosConfig, 'responseType'> {
+export interface HAxiosRequestConfigBase<D = any> extends Omit<AxiosConfig, 'responseType'> {
 	data?: D;
 	onDownloadProgress?: (progressEvent: any) => void;
 	withCredentials?: boolean;
