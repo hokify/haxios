@@ -1,5 +1,6 @@
 import { GaxiosOptions, GaxiosResponse, RetryConfig } from 'gaxios';
 import type { CancelToken } from './CancelToken';
+import { Stream } from 'stream';
 
 type HaxiosRequestArrayBufferConfig<D> = HAxiosRequestConfigBase<D> & {
 	responseType: 'arraybuffer';
@@ -33,20 +34,18 @@ export interface HaxiosRequest extends GaxiosXMLHttpRequest {
 type HaxiosRETURN<RETURN, INPUT, CONFIG> = CONFIG extends HaxiosRequestArrayBufferConfig<INPUT>
 	? ArrayBuffer
 	: CONFIG extends HaxiosRequestJsonConfig<INPUT>
-		? RETURN
-		: CONFIG extends HaxiosRequestTextConfig<INPUT>
-			? string
-			: CONFIG extends HaxiosRequestStreamConfig<INPUT>
-				? ReadableStream
-				: unknown
+	? RETURN
+	: CONFIG extends HaxiosRequestTextConfig<INPUT>
+	? string
+	: CONFIG extends HaxiosRequestStreamConfig<INPUT>
+	? Stream
+	: unknown;
 
-export interface HAxiosResponse<RETURN = any, INPUT = any, CONFIG extends HAxiosRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>>
-	extends Omit<
-		GaxiosResponse<
-			HaxiosRETURN<RETURN,INPUT,CONFIG>
-		>,
-		'request'
-	> {
+export interface HAxiosResponse<
+	RETURN = any,
+	INPUT = any,
+	CONFIG extends HAxiosRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>
+> extends Omit<GaxiosResponse<HaxiosRETURN<RETURN, INPUT, CONFIG>>, 'request'> {
 	config: HAxiosRequestConfig<INPUT>;
 	request?: HaxiosRequest;
 }

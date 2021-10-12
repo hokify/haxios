@@ -1,6 +1,12 @@
 import * as Gaxios from 'gaxios';
 import { InterceptorHandler, InterceptorManager } from './InterceptorManager';
-import { AxiosAdapter, AxiosConfig, HAxiosRequestConfig, HAxiosResponse } from './axios';
+import {
+	AxiosAdapter,
+	AxiosConfig,
+	HAxiosRequestConfig,
+	HAxiosRequestConfigBase,
+	HAxiosResponse
+} from './axios';
 import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
 import { Cancel, CancelToken } from './CancelToken';
@@ -12,7 +18,8 @@ export * from './axios';
 
 export { GaxiosError as AxiosError };
 export type { HAxiosResponse as AxiosResponse };
-export type { HAxiosRequestConfig as AxiosRequestConfig };
+export type { HAxiosRequestConfigBase as AxiosRequestConfig };
+export type { HAxiosRequestConfig };
 
 export type Method = GaxiosOptions['method'];
 
@@ -70,23 +77,6 @@ export class AxiosWrapper {
 
 		if (config.withCredentials) {
 			config.credentials = 'include';
-		}
-
-		// only on server
-		if (!isBrowser && !initialize) {
-			// Set User-Agent (required by some servers)
-			// See https://github.com/axios/axios/issues/69
-			if ('user-agent' in headerNames) {
-				// User-Agent is specified; handle case where no UA header is desired
-				if (!config.headers[headerNames['user-agent']]) {
-					delete config.headers[headerNames['user-agent']];
-				}
-				// Otherwise, use specified value
-			} else {
-				// Only set header if it hasn't been set in config
-				// todo get package version in prebuild step
-				config.headers['User-Agent'] = 'haxios';
-			}
 		}
 
 		const setContentTypeIfUnset = (contentType: string) => {
@@ -396,7 +386,7 @@ export class AxiosWrapper {
 }
 
 export type AxiosInstance = Omit<AxiosWrapper, 'defaults'> &
-	AxiosWrapper['request'] & { defaults: HaxiosOptions };
+	AxiosWrapper['request'] & { defaults: HaxiosOptions } & { Cancel: typeof Cancel };
 
 const enrichedInstance: AxiosStatic = AxiosWrapper.create() as AxiosStatic;
 
@@ -409,5 +399,6 @@ export type AxiosStatic = AxiosInstance & {
 enrichedInstance.isAxiosError = (err: any): err is GaxiosError => err instanceof GaxiosError;
 enrichedInstance.CancelToken = CancelToken;
 enrichedInstance.isCancel = CancelToken.isCancel;
+enrichedInstance.Cancel = Cancel;
 
 export default enrichedInstance;

@@ -1,7 +1,6 @@
-
+import axios from '../../../src'
 
 describe('supports http with nodejs', function () {
-	var axios = require('../../../src').default;
 	var http = require('http');
 	var https = require('https');
 	var net = require('net');
@@ -48,7 +47,7 @@ describe('supports http with nodejs', function () {
 
 		try {
 			await axios.get('http://localhost:4444/', {
-				timeout: { strangeTimeout: 250 }
+				timeout: { strangeTimeout: 250 } as any
 			});
 
 			success = true;
@@ -80,7 +79,7 @@ describe('supports http with nodejs', function () {
 
 		try {
 			await axios.get('http://localhost:4444/', {
-				timeout: '250'
+				timeout: '250' as any
 			});
 			success = true;
 		} catch (err) {
@@ -189,7 +188,7 @@ describe('supports http with nodejs', function () {
 
 		const res = await axios.get('http://localhost:4444/one');
 		assert.equal(res.data, str);
-		assert.equal(res.request.path, '/two');
+		assert.equal(res.request?.path, '/two');
 	});
 
 	it('should not redirect', async function () {
