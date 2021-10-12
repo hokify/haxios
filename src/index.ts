@@ -38,6 +38,7 @@ export class AxiosWrapper {
 	baseURL?: string;
 
 	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
+		const isBrowser = typeof window === 'undefined';
 		if (config.timeout) {
 			const timeout = parseInt(config.timeout as any, 10);
 
@@ -72,7 +73,7 @@ export class AxiosWrapper {
 		}
 
 		// only on server
-		if (typeof window === 'undefined' && !initialize) {
+		if (!isBrowser && !initialize) {
 			// Set User-Agent (required by some servers)
 			// See https://github.com/axios/axios/issues/69
 			if ('user-agent' in headerNames) {
@@ -143,6 +144,12 @@ export class AxiosWrapper {
 					} catch (err) {
 						console.info('parsing failed', err);
 					}
+
+					// convert arraybuffer to buffer
+					if (!isBrowser && result instanceof ArrayBuffer) {
+						return Buffer.from(result);
+					}
+
 					return result;
 				} catch (err: any) {
 					throw err;
