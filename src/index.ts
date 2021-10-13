@@ -107,7 +107,7 @@ export class AxiosWrapper {
 			config.data = JSON.stringify(config.data);
 		} else if (isArrayBufferView(config.data)) {
 			originalData = config.data.buffer;
-			config.data = undefined;
+			// config.data = undefined;
 		} else if (config.data) {
 			if (isURLSearchParams(config.data)) {
 				setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
@@ -115,7 +115,7 @@ export class AxiosWrapper {
 			/** special handling via config.adapter!
 			 * see https://github.com/googleapis/gaxios/issues/447 */
 			originalData = config.data;
-			config.data = undefined;
+			// config.data = undefined;
 		}
 
 		if (!config.adapter && !initialize) {
