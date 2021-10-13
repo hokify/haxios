@@ -54,7 +54,7 @@ export function isPlainObject(obj) {
 		prototype === null ||
 		prototype.constructor === Object ||
 		prototype.constructor === null ||
-		prototype.toString() === '[object Object]'
+		Object.prototype.toString.call(prototype) === '[object Object]'
 	);
 }
 

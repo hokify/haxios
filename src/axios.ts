@@ -2,22 +2,24 @@ import { GaxiosOptions, GaxiosResponse, RetryConfig } from 'gaxios';
 import type { CancelToken } from './CancelToken';
 import { Stream } from 'stream';
 
-type HaxiosRequestArrayBufferConfig<D> = HAxiosRequestConfigBase<D> & {
+type HaxiosRequestArrayBufferConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & {
 	responseType: 'arraybuffer';
 };
-type HaxiosRequestJsonConfig<D> = HAxiosRequestConfigBase<D> & {
+type HaxiosRequestJsonConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & {
 	responseType?: 'json' | undefined;
 };
-type HaxiosRequestTextConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'text' };
-type HaxiosRequestStreamConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'stream' };
-type HaxiosRequestBlobConfig<D> = HAxiosRequestConfigBase<D> & { responseType: 'blob' };
+type HaxiosRequestTextConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { responseType: 'text' };
+type HaxiosRequestStreamConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { responseType: 'stream' };
+type HaxiosRequestBlobConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { responseType: 'blob' };
 
-export type HAxiosRequestConfig<D = any> =
-	| HaxiosRequestArrayBufferConfig<D>
-	| HaxiosRequestJsonConfig<D>
-	| HaxiosRequestTextConfig<D>
-	| HaxiosRequestStreamConfig<D>
-	| HaxiosRequestBlobConfig<D>;
+export type DefaultRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>
+
+export type HAxiosRequestConfig<INPUT = any> =
+	| HaxiosRequestArrayBufferConfig<INPUT>
+	| HaxiosRequestJsonConfig<INPUT>
+	| HaxiosRequestTextConfig<INPUT>
+	| HaxiosRequestStreamConfig<INPUT>
+	| HaxiosRequestBlobConfig<INPUT>;
 
 export interface HAxiosRequestConfigBase<D = any> extends Omit<AxiosConfig, 'responseType'> {
 	data?: D;
@@ -44,7 +46,7 @@ type HaxiosRETURN<RETURN, INPUT, CONFIG> = CONFIG extends HaxiosRequestArrayBuff
 export interface HAxiosResponse<
 	RETURN = any,
 	INPUT = any,
-	CONFIG extends HAxiosRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>
+	CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 > extends Omit<GaxiosResponse<HaxiosRETURN<RETURN, INPUT, CONFIG>>, 'request'> {
 	config: HAxiosRequestConfig<INPUT>;
 	request?: HaxiosRequest;
@@ -105,7 +107,7 @@ export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
 	xsrfCookieName?: string;
 	// ??
 	xsrfHeaderName?: string;
-	// not workig right now
+	// not implemented yet
 	onDownloadProgress?: (progressEvent: any) => void;
 	// does nothing
 	maxBodyLength?: number;

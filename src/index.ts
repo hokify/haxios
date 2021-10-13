@@ -3,6 +3,7 @@ import { InterceptorHandler, InterceptorManager } from './InterceptorManager';
 import {
 	AxiosAdapter,
 	AxiosConfig,
+	DefaultRequestConfig,
 	HAxiosRequestConfig,
 	HAxiosRequestConfigBase,
 	HAxiosResponse
@@ -20,6 +21,7 @@ export { GaxiosError as AxiosError };
 export type { HAxiosResponse as AxiosResponse };
 export type { HAxiosRequestConfigBase as AxiosRequestConfig };
 export type { HAxiosRequestConfig };
+export type { DefaultRequestConfig };
 
 export type Method = GaxiosOptions['method'];
 
@@ -95,10 +97,10 @@ export class AxiosWrapper {
 		} else if (isArrayBufferView(config.data)) {
 			originalData = config.data.buffer;
 			config.data = undefined;
-		} else if (isURLSearchParams(config.data)) {
-			setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
-			config.data = config.data.toString();
 		} else if (config.data) {
+			if (isURLSearchParams(config.data)) {
+				setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
+			}
 			/** special handling via config.adapter!
 			 * see https://github.com/googleapis/gaxios/issues/447 */
 			originalData = config.data;
@@ -106,7 +108,7 @@ export class AxiosWrapper {
 		}
 
 		if (!config.adapter && !initialize) {
-			config.adapter = (async (options, defaultAdapter) => {
+			config.adapter = (async (options: AxiosConfig, defaultAdapter) => {
 				try {
 					// reapply original data
 					// due to a bug/missing functionality in gaxios, data is parsed as json
@@ -114,11 +116,38 @@ export class AxiosWrapper {
 					if (originalData) {
 						options.body = originalData;
 						if (isFormData(originalData)) {
-							delete options.headers['Content-Type']; // Let the browser set it
+							delete options.headers?.['Content-Type']; // Let the browser set it
 						}
 					}
 
-					const result = (await defaultAdapter(options)) as HAxiosResponse;
+					let adapter = defaultAdapter;
+
+					// upload progress is currently not supproted by fetch
+					// switch to XHR on client in this case (on server we do not care about upload progerss right now)
+					// https://stackoverflow.com/questions/35711724/upload-progress-indicators-for-fetch
+					if (isBrowser && typeof config.onUploadProgress === 'function') {
+						const xhr = new XMLHttpRequest();
+						adapter = (adapterConfig: AxiosConfig) =>
+							new Promise(resolve => {
+								xhr.upload.addEventListener('progress', event => {
+									if (event.lengthComputable) {
+										// console.log("upload progress:", event.loaded / event.total);
+										config.onUploadProgress!(event); // .value = event.loaded / event.total;
+									}
+								});
+
+								xhr.addEventListener('loadend', () => {
+									resolve(xhr.readyState === 4 && xhr.status === 200);
+								});
+								xhr.open('PUT', adapterConfig.url!, true);
+								for (const header in adapterConfig.headers) {
+									xhr.setRequestHeader(header, adapterConfig.headers[header]);
+								}
+								xhr.send(adapterConfig.body);
+							});
+					}
+
+					const result = (await adapter(options)) as HAxiosResponse;
 
 					try {
 						if (result.request?.responseURL) {
@@ -267,7 +296,7 @@ export class AxiosWrapper {
 	get<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'GET', ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -283,7 +312,7 @@ export class AxiosWrapper {
 	delete<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'DELETE', ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -293,7 +322,7 @@ export class AxiosWrapper {
 	head<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'HEAD', ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -303,7 +332,7 @@ export class AxiosWrapper {
 	options<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'OPTIONS', ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -313,7 +342,7 @@ export class AxiosWrapper {
 	post<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'POST', data, ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -323,7 +352,7 @@ export class AxiosWrapper {
 	put<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'PUT', data, ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
@@ -333,7 +362,7 @@ export class AxiosWrapper {
 	patch<
 		RETURN = any,
 		INPUT = any,
-		CONFIG extends HAxiosRequestConfig<INPUT> = HAxiosRequestConfig<INPUT>
+		CONFIG extends HAxiosRequestConfig<INPUT> = DefaultRequestConfig<INPUT>
 	>(url: string, data?: INPUT, config?: CONFIG): Promise<HAxiosResponse<RETURN, INPUT, CONFIG>> {
 		return this.request({ url, method: 'PATCH', data, ...config }) as Promise<
 			HAxiosResponse<RETURN, INPUT, CONFIG>
