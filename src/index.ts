@@ -97,7 +97,12 @@ export class AxiosWrapper {
 		};
 
 		let originalData: any | undefined;
-		if (typeof config.data === 'object' && isPlainObject(config.data)) {
+		if (
+			// if we have a content-type already, we do no magic transformation
+			!headerNames['content-type'] &&
+			typeof config.data === 'object' &&
+			isPlainObject(config.data)
+		) {
 			setContentTypeIfUnset('application/json');
 			config.data = JSON.stringify(config.data);
 		} else if (isArrayBufferView(config.data)) {
@@ -203,6 +208,7 @@ export class AxiosWrapper {
 										reject(response);
 									}
 								});
+
 								xhr.open(adapterConfig.method!, adapterConfig.url!, true);
 								for (const header in adapterConfig.headers) {
 									xhr.setRequestHeader(header, adapterConfig.headers[header]);
