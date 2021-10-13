@@ -11,7 +11,13 @@ import {
 import { Headers, GaxiosError, GaxiosOptions } from 'gaxios';
 import { GaxiosResponse } from 'gaxios/build/src/common';
 import { Cancel, CancelToken } from './CancelToken';
-import { isFormData, isPlainObject, isURLSearchParams, isArrayBufferView } from './utils';
+import {
+	isFormData,
+	isPlainObject,
+	isURLSearchParams,
+	isArrayBufferView,
+	parseHeaders
+} from './utils';
 
 export type { Cancel, Canceler, CancelToken, CancelTokenSource } from './CancelToken';
 
@@ -47,7 +53,7 @@ export class AxiosWrapper {
 	baseURL?: string;
 
 	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
-		const isBrowser = typeof window === 'undefined';
+		const isBrowser = typeof window !== 'undefined';
 		if (config.timeout) {
 			const timeout = parseInt(config.timeout as any, 10);
 
@@ -128,21 +134,80 @@ export class AxiosWrapper {
 					if (isBrowser && typeof config.onUploadProgress === 'function') {
 						const xhr = new XMLHttpRequest();
 						adapter = (adapterConfig: AxiosConfig) =>
-							new Promise(resolve => {
-								xhr.upload.addEventListener('progress', event => {
-									if (event.lengthComputable) {
-										// console.log("upload progress:", event.loaded / event.total);
-										config.onUploadProgress!(event); // .value = event.loaded / event.total;
-									}
-								});
+							new Promise((resolve, reject) => {
+								if (xhr.upload) {
+									xhr.upload.addEventListener('progress', event => {
+										if (event.lengthComputable) {
+											adapterConfig.onUploadProgress!(event); // .value = event.loaded / event.total;
+										}
+									});
+								}
+
+								xhr.addEventListener('onabort', reject);
+								xhr.addEventListener('onerror', reject);
+
+								if (
+									adapterConfig.responseType &&
+									adapterConfig.responseType !== 'json' &&
+									adapterConfig.responseType !== 'stream'
+								) {
+									xhr.responseType = adapterConfig.responseType;
+								}
+
+								if (adapterConfig.timeout !== undefined) {
+									xhr.timeout = adapterConfig.timeout;
+								}
 
 								xhr.addEventListener('loadend', () => {
-									resolve(xhr.readyState === 4 && xhr.status === 200);
+									// Prepare the response
+									const responseHeaders =
+										'getAllResponseHeaders' in xhr
+											? parseHeaders(xhr.getAllResponseHeaders())
+											: null;
+									let responseData =
+										!adapterConfig.responseType ||
+										adapterConfig.responseType === 'text' ||
+										adapterConfig.responseType === 'json'
+											? xhr.responseText
+											: xhr.response;
+
+									switch (adapterConfig.responseType) {
+										case 'json': {
+											try {
+												responseData = JSON.parse(responseData);
+											} catch (_a) {
+												// continue
+											}
+											break;
+										}
+										case 'stream':
+										case 'arraybuffer':
+										case 'blob':
+										default:
+											// keep it as it is
+											break;
+									}
+
+									const response = {
+										data: responseData,
+										status: xhr.status,
+										statusText: xhr.statusText,
+										headers: responseHeaders,
+										config: config,
+										request: xhr
+									};
+
+									if (xhr.readyState === 4 && xhr.status === 200) {
+										resolve(response);
+									} else {
+										reject(response);
+									}
 								});
-								xhr.open('PUT', adapterConfig.url!, true);
+								xhr.open(adapterConfig.method!, adapterConfig.url!, true);
 								for (const header in adapterConfig.headers) {
 									xhr.setRequestHeader(header, adapterConfig.headers[header]);
 								}
+								xhr.withCredentials = adapterConfig.credentials === 'include';
 								xhr.send(adapterConfig.body);
 							});
 					}
