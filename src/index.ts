@@ -466,6 +466,7 @@ export class AxiosWrapper {
 
 		enrichedInstance.interceptors = instance.interceptors;
 		enrichedInstance.defaults = instance.defaults;
+		enrichedInstance.baseURL = instance.baseURL;
 
 		enrichedInstance.request = instance.request.bind(instance);
 		enrichedInstance.getUri = instance.getUri.bind(instance);
