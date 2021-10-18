@@ -40,7 +40,7 @@ type HaxiosRETURN<RETURN, INPUT, CONFIG> = CONFIG extends HaxiosRequestArrayBuff
 	: CONFIG extends HaxiosRequestTextConfig<INPUT>
 	? string
 	: CONFIG extends HaxiosRequestStreamConfig<INPUT>
-	? string
+	? Stream
 	: CONFIG extends HaxiosRequestBlobConfig<INPUT>
 	? Blob
 	: unknown;
@@ -78,6 +78,10 @@ export interface AxiosResponseTransformer {
 
 export interface AxiosPromise<RETURN = any> extends Promise<HAxiosResponse> {}
 
+export interface Headers {
+	[index: string]: string;
+}
+
 export type AxiosAdapter = <RETURN = any>(
 	options: AxiosConfig,
 	defaultAdapter: (options: AxiosConfig) => AxiosPromise<RETURN>
@@ -86,6 +90,8 @@ export type AxiosAdapter = <RETURN = any>(
 export interface AxiosConfig extends Omit<GaxiosOptions, 'baseUrl'> {
 	// if withCredentials is true, it's set to include
 	credentials?: 'omit' | 'same-origin' | 'include';
+
+	headers?: Headers;
 
 	retry?: boolean;
 	retryConfig?: RetryConfig;
