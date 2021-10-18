@@ -203,14 +203,14 @@ export class AxiosWrapper {
 											request: xhr
 										});
 									} else {
-										throw new GaxiosError(`Request failed with status code ${xhr.status}`, config, {
+										reject(new GaxiosError(`Request failed with status code ${xhr.status}`, config, {
 											data: responseData,
 											status: xhr.status,
 											statusText: xhr.statusText,
 											headers: responseHeaders,
 											request: xhr,
 											config
-										});
+										}));
 									}
 								});
 
