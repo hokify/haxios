@@ -12,7 +12,7 @@ type HaxiosRequestTextConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { respons
 type HaxiosRequestStreamConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { responseType: 'stream' };
 type HaxiosRequestBlobConfig<INPUT> = HAxiosRequestConfigBase<INPUT> & { responseType: 'blob' };
 
-export type DefaultRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>
+export type DefaultRequestConfig<INPUT> = HaxiosRequestJsonConfig<INPUT>;
 
 export type HAxiosRequestConfig<INPUT = any> =
 	| HaxiosRequestArrayBufferConfig<INPUT>
@@ -40,7 +40,9 @@ type HaxiosRETURN<RETURN, INPUT, CONFIG> = CONFIG extends HaxiosRequestArrayBuff
 	: CONFIG extends HaxiosRequestTextConfig<INPUT>
 	? string
 	: CONFIG extends HaxiosRequestStreamConfig<INPUT>
-	? Stream
+	? string
+	: CONFIG extends HaxiosRequestBlobConfig<INPUT>
+	? Blob
 	: unknown;
 
 export interface HAxiosResponse<

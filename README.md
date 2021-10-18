@@ -6,10 +6,12 @@ adds following feature to gaxios:
 * interceptors
 * get,post,..etc methods
 * dynamic baseURL ..
+* onUploadProgress on client via XHR
 * and more to come
 
 not implemented yet:
 * cancel request token support tests / matrix .. could work, but unsure.
+* fully support and port test library from axios
 
 target support is es6 / modern browsers
 
