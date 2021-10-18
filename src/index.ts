@@ -168,7 +168,7 @@ export class AxiosWrapper {
 									const responseHeaders =
 										'getAllResponseHeaders' in xhr
 											? parseHeaders(xhr.getAllResponseHeaders())
-											: null;
+											: {};
 									let responseData =
 										!adapterConfig.responseType ||
 										adapterConfig.responseType === 'text' ||
@@ -193,19 +193,24 @@ export class AxiosWrapper {
 											break;
 									}
 
-									const response = {
-										data: responseData,
-										status: xhr.status,
-										statusText: xhr.statusText,
-										headers: responseHeaders,
-										config: config,
-										request: xhr
-									};
-
 									if (xhr.readyState === 4 && xhr.status === 200) {
-										resolve(response);
+										resolve({
+											data: responseData,
+											status: xhr.status,
+											statusText: xhr.statusText,
+											headers: responseHeaders,
+											config: config,
+											request: xhr
+										});
 									} else {
-										reject(response);
+										throw new GaxiosError(`Request failed with status code ${xhr.status}`, config, {
+											data: responseData,
+											status: xhr.status,
+											statusText: xhr.statusText,
+											headers: responseHeaders,
+											request: xhr,
+											config
+										});
 									}
 								});
 
