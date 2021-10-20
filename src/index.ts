@@ -105,9 +105,10 @@ export class AxiosWrapper {
 		) {
 			setContentTypeIfUnset('application/json');
 			config.data = JSON.stringify(config.data);
-		} else if (isArrayBufferView(config.data)) {
+			/*} else if (isArrayBufferView(config.data)) {
 			originalData = config.data.buffer;
 			// config.data = undefined;
+		*/
 		} else if (config.data) {
 			if (isURLSearchParams(config.data)) {
 				setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
@@ -166,9 +167,7 @@ export class AxiosWrapper {
 								xhr.addEventListener('loadend', () => {
 									// Prepare the response
 									const responseHeaders =
-										'getAllResponseHeaders' in xhr
-											? parseHeaders(xhr.getAllResponseHeaders())
-											: {};
+										'getAllResponseHeaders' in xhr ? parseHeaders(xhr.getAllResponseHeaders()) : {};
 									let responseData =
 										!adapterConfig.responseType ||
 										adapterConfig.responseType === 'text' ||
@@ -203,14 +202,16 @@ export class AxiosWrapper {
 											request: xhr
 										});
 									} else {
-										reject(new GaxiosError(`Request failed with status code ${xhr.status}`, config, {
-											data: responseData,
-											status: xhr.status,
-											statusText: xhr.statusText,
-											headers: responseHeaders,
-											request: xhr,
-											config
-										}));
+										reject(
+											new GaxiosError(`Request failed with status code ${xhr.status}`, config, {
+												data: responseData,
+												status: xhr.status,
+												statusText: xhr.statusText,
+												headers: responseHeaders,
+												request: xhr,
+												config
+											})
+										);
 									}
 								});
 
