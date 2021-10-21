@@ -465,6 +465,18 @@ export class AxiosWrapper {
 		return AxiosWrapper.create(config);
 	}
 
+	isAxiosError(err: any): err is GaxiosError {
+		return err instanceof GaxiosError;
+	}
+
+	CancelToken = CancelToken;
+
+	isCancel(err: any): err is Cancel {
+		return CancelToken.isCancel(err);
+	}
+
+	Cancel = Cancel;
+
 	static create(config?: AxiosConfig): AxiosInstance {
 		const instance = new AxiosWrapper(config);
 
@@ -488,6 +500,11 @@ export class AxiosWrapper {
 		enrichedInstance.setHeader = instance.setHeader.bind(instance);
 		enrichedInstance.create = instance.create.bind(instance);
 
+		enrichedInstance.isAxiosError = instance.isAxiosError.bind(instance);
+		enrichedInstance.CancelToken = CancelToken;
+		enrichedInstance.isCancel = instance.isCancel.bind(instance);
+		enrichedInstance.Cancel = Cancel;
+
 		return enrichedInstance;
 	}
 }
@@ -497,11 +514,7 @@ export type AxiosInstance = Omit<AxiosWrapper, 'defaults'> &
 
 const enrichedInstance: AxiosStatic = AxiosWrapper.create() as AxiosStatic;
 
-export type AxiosStatic = AxiosInstance & {
-	isAxiosError: (err: any) => err is GaxiosError;
-	CancelToken: typeof CancelToken;
-	isCancel: (err: any) => err is Cancel;
-};
+export type AxiosStatic = AxiosInstance;
 
 enrichedInstance.isAxiosError = (err: any): err is GaxiosError => err instanceof GaxiosError;
 enrichedInstance.CancelToken = CancelToken;
