@@ -47,6 +47,98 @@ const creatAxiosError = (
 	err.code = code;
 	return err;
 };
+
+function getConfig(err: GaxiosError) {
+	if (err && err.config && err.config.retryConfig) {
+		return err.config.retryConfig;
+	}
+	return;
+}
+
+async function shouldRetryRequest(err: GaxiosError) {
+	const config = err.config?.retryConfig;
+
+	// node-fetch raises an AbortError if signaled:
+	// https://github.com/bitinn/node-fetch#request-cancellation-with-abortsignal
+	if (err.name === 'AbortError') {
+		return false;
+	}
+
+	// If there's no config, or retries are disabled, return.
+	if (!config || config.retry === 0) {
+		return false;
+	}
+
+	// Check if this error has no response (ETIMEDOUT, ENOTFOUND, etc)
+	if (!err.response && (config.currentRetryAttempt || 0) >= config.noResponseRetries!) {
+		return false;
+	}
+
+	// Only retry with configured HttpMethods.
+	if (
+		!err.config.method ||
+		config.httpMethodsToRetry!.indexOf(err.config.method.toUpperCase()) < 0
+	) {
+		return false;
+	}
+
+	// If this wasn't in the list of status codes where we want
+	// to automatically retry, return.
+	if (err.response?.status) {
+		let isInRange = false;
+		for (const [min, max] of config.statusCodesToRetry!) {
+			const status = err.response.status;
+			if (status >= min && status <= max) {
+				isInRange = true;
+				break;
+			}
+		}
+		if (!isInRange) {
+			return false;
+		}
+	}
+
+	// If we are out of retry attempts, return
+	config.currentRetryAttempt = config.currentRetryAttempt || 0;
+	if (
+		config.currentRetryAttempt >=
+		(err.response?.status === 429 ? Math.max(config.retry!, 5) : config.retry!)
+	) {
+		return false;
+	}
+
+	// RETRY DELAY - unfortunately gaxios doesn't wait on "onRetryAttempt",
+	// therefore we need to put that in here
+	let finalDelay: number | undefined;
+
+	const retryAfterHeader =
+		err.response?.headers['Retry-After'] || err.response?.headers['retry-after'];
+	if (retryAfterHeader) {
+		// we got an retry-after header
+		let nval = Number(retryAfterHeader);
+		if (Number.isFinite(nval)) {
+			// it's given in seconds, we need ms (*1000)
+			finalDelay = (nval || 1) * 1000;
+		} else {
+			let retryDateMS = Date.parse(retryAfterHeader);
+			if (!Number.isNaN(retryDateMS)) {
+				finalDelay = retryDateMS - Date.now();
+			}
+		}
+	}
+
+	if (!finalDelay) {
+		// do exponential back off
+		const delay = Math.pow(2, config.currentRetryAttempt || 0) * 1000;
+		const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
+		finalDelay = delay + randomSum;
+	}
+
+	await new Promise(resolve => setTimeout(resolve, finalDelay));
+
+	return true;
+}
+
 export class AxiosWrapper {
 	private gaxiosInstance: Gaxios.Gaxios;
 
@@ -55,7 +147,17 @@ export class AxiosWrapper {
 	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
 		if (!initialize) {
 			// apply default vars
-			config = {...this.defaults, ...config};
+			config = { ...this.defaults, ...config };
+		}
+
+		// default retry config
+		config.retry = config.retry ?? true;
+		if (config.retry) {
+			// overwrite default retry config
+			config.retryConfig = {
+				shouldRetry: shouldRetryRequest,
+				...(config.retryConfig || {})
+			};
 		}
 
 		const isBrowser = typeof window !== 'undefined';
