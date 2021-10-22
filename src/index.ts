@@ -53,6 +53,11 @@ export class AxiosWrapper {
 	baseURL?: string;
 
 	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
+		if (!initialize) {
+			// apply default vars
+			config = {...this.defaults, ...config};
+		}
+
 		const isBrowser = typeof window !== 'undefined';
 		if (config.timeout) {
 			const timeout = parseInt(config.timeout as any, 10);
@@ -105,10 +110,6 @@ export class AxiosWrapper {
 		) {
 			setContentTypeIfUnset('application/json');
 			config.data = JSON.stringify(config.data);
-			/*} else if (isArrayBufferView(config.data)) {
-			originalData = config.data.buffer;
-			// config.data = undefined;
-		*/
 		} else if (config.data) {
 			if (isURLSearchParams(config.data)) {
 				setContentTypeIfUnset('application/x-www-form-urlencoded;charset=utf-8');
