@@ -146,8 +146,16 @@ export class AxiosWrapper {
 
 	private transformAxiosConfigToGaxios(config: AxiosConfig, initialize = false): GaxiosOptions {
 		if (!initialize) {
-			// apply default vars
-			config = { ...this.defaults, ...config };
+			// apply defaults
+			config = {
+				...this.defaults,
+				...config,
+				// ensure deep copy of defaults of headers
+				headers: {
+					...this.defaults.headers,
+					...config.headers
+				}
+			};
 		}
 
 		// default retry config
