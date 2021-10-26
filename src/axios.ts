@@ -76,7 +76,7 @@ export interface AxiosResponseTransformer {
     (data: any, headers?: AxiosResponseHeaders): any;
 }*/
 
-export interface AxiosPromise<RETURN = any> extends Promise<HAxiosResponse> {}
+export interface AxiosPromise<RETURN = any> extends Promise<HAxiosResponse<RETURN>> {}
 
 export interface Headers {
 	[index: string]: string;
